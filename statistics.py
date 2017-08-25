@@ -4,18 +4,22 @@
 >>> Database('proj_big', 'asset_task').info().generate_page('e:/test/test.html')
 """
 import os
+import sys
 import json
 import time
 
+from PySide.QtGui import QFileDialog, QApplication, QDialog
+
+from ui_statistics import Ui_Dialog
+
 try:
-    import sys
     sys.path.append('//SERVER/scripts/NukePlugins/wlf/py')
     from wlf.cgtwq import CGTeamWork
-    from wlf.files import get_encoded
+    from wlf.files import get_encoded, url_open
 except ImportError:
     raise
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 
 class Database(CGTeamWork):
@@ -176,6 +180,7 @@ class AssetTask(object):
 
 
 def indent(text, num=4):
+    """Indent text by line.  """
     return '\n'.join(list(' ' * num + i for i in text.split('\n')))
 
 
@@ -196,6 +201,7 @@ class Info(dict):
 
     def generate_page(self, path):
         """Create html page form info.  """
+        # XXX: maybe can use one function to deal this similar pattern?
 
         def _artist(artist, status):
             ret = []
@@ -263,11 +269,11 @@ class Info(dict):
         template = u'''<body>
 <table>
 <tr>
-<th>姓名</th>
-<th>状态</th>
-<th>工序</th>
-<th>难度级别</th>
-<th>数量</th>
+    <th>姓名</th>
+    <th>状态</th>
+    <th>工序</th>
+    <th>难度级别</th>
+    <th>数量</th>
 </tr>
 {}</table>
 </body>'''
@@ -277,6 +283,8 @@ class Info(dict):
         with open(get_encoded(path), 'w') as f:
             f.write(get_encoded(head + body, 'UTF-8'))
         self.write(os.path.splitext(path)[0] + '.json')
+
+        return path
 
     def write(self, path=None):
         """Write this info to disk.  """
@@ -293,3 +301,40 @@ class InfoEncoder(json.JSONEncoder):
             return o.serialize()
         except AttributeError:
             return json.JSONEncoder.default(self, o)
+
+
+class Dialog(QDialog, Ui_Dialog):
+    """Dialog as cgteamwork plugin.  """
+
+    def __init__(self):
+        def _actions():
+            self.actionPath.triggered.connect(self.ask_path)
+        super(Dialog, self).__init__()
+        self.setupUi(self)
+        _actions()
+
+    def ask_path(self):
+        """Show a dialog ask config['NUKE'].  """
+
+        dialog = QFileDialog()
+        filename, selected_filter = dialog.getSaveFileName(
+            filter='*.html')
+        selected_filter = selected_filter[1:]
+        if filename:
+            if not filename.endswith(selected_filter):
+                filename += selected_filter
+            self.lineEdit.setText(filename)
+
+    def accept(self):
+        """Overrride QDialog accept.  """
+        path = self.lineEdit.text()
+        Database().info().generate_page(path)
+        url_open(path, isfile=True)
+        self.close()
+
+
+if __name__ == '__main__':
+    APP = QApplication(sys.argv)
+    FRAME = Dialog()
+    FRAME.show()
+    sys.exit(APP.exec_())
