@@ -9,14 +9,38 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>93</height>
+    <width>383</width>
+    <height>137</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>生成工时表</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>起始日期</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDateTimeEdit" name="dateTimeEdit">
+     <property name="date">
+      <date>
+       <year>2017</year>
+       <month>1</month>
+       <day>1</day>
+      </date>
+     </property>
+     <property name="currentSection">
+      <enum>QDateTimeEdit::MonthSection</enum>
+     </property>
+     <property name="calendarPopup">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
    <item>
     <widget class="QLabel" name="label">
      <property name="text">

@@ -6,9 +6,9 @@
 import os
 import sys
 import json
-import time
+import datetime
 
-from PySide.QtGui import QFileDialog, QApplication, QDialog
+from PySide.QtGui import QFileDialog, QApplication, QDialog, QErrorMessage
 
 from ui_statistics import Ui_Dialog
 
@@ -19,11 +19,12 @@ try:
 except ImportError:
     raise
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 
 class Database(CGTeamWork):
     """CGteamwork database. """
+
     artist_field = 'asset_task.artist'
 
     def __init__(self, database=None, module=None, since=None):
@@ -33,12 +34,13 @@ class Database(CGTeamWork):
         self.task_module.init_with_filter([])
         self._artists = list(i for i in self.task_module.get_distinct_with_filter(
             'asset_task.artist', []) if i)
+        self._since = since
 
     def info(self):
         """Return all needed info as a object. """
         ret = {}
         for artist in self.artists:
-            ret[artist] = self.artist(artist)
+            ret[artist] = self.artist(artist).info(since=self._since)
         return Info(ret)
 
     @property
@@ -75,24 +77,22 @@ class Artist(object):
     def tasks(self, value):
         self._tasks = AssetTasks(value)
 
-    def level_count(self):
+    def level_count(self, since=None):
         """Return count for each level.  """
         ret = {}
-        ret['finished'] = self.finished_tasks().level_count(div=True)
+        ret['finished'] = self.finished_tasks(
+            since=since).level_count(div=True)
         ret['working'] = self.working_tasks().level_count(div=True)
         return ret
 
     def finished_tasks(self, since=None):
         """Return finished tasks for this artist since @since given time.  """
 
-        if isinstance(since, (str, unicode)):
-            since = time.strptime(since, AssetTask.timef)
-
-        ret = AssetTasks(task for task in self.tasks if task.is_approved
-                         and(not since or task.finish_time > since))
+        ret = AssetTasks(
+            task for task in self.tasks if task.is_newer_than(since))
         return ret
 
-    def working_tasks(self, since=None):
+    def working_tasks(self):
         """Return working tasks for this artist.  """
         ret = AssetTasks(task for task in self.tasks if not task.is_approved)
         return ret
@@ -100,6 +100,10 @@ class Artist(object):
     def serialize(self):
         """Return serialized information.  """
         return self.level_count()
+
+    def info(self, since=None):
+        """Return all needed info. """
+        return self.level_count(since=since)
 
 
 class AssetTasks(list):
@@ -157,6 +161,16 @@ class AssetTask(object):
         self._info = info
 
     @property
+    def name(self):
+        """Return name of this task"""
+        return self._info[self.fields['name']]
+
+    @property
+    def cn_name(self):
+        """Return cn——name of this task"""
+        return self._info[self.fields['cn_name']]
+
+    @property
     def level(self):
         """Return diffcult level of this task"""
         return self._info[self.fields['level']]
@@ -176,7 +190,15 @@ class AssetTask(object):
         """Task finish time in time struct. """
         str_time = self._info[self.fields['finish_time']]
         if str_time:
-            return time.strptime(str_time, self.timef)
+            return datetime.datetime.strptime(str_time, self.timef)
+
+    def is_newer_than(self, date):
+        """Return if newer than @date.  """
+
+        assert isinstance(
+            date, datetime.datetime), 'Expected datetime.datetime, got {}'.format(date)
+        if self.is_approved:
+            return self.finish_time >= date
 
 
 def indent(text, num=4):
@@ -209,10 +231,11 @@ class Info(dict):
                 if not v:
                     continue
                 ret.extend(_status(k, v))
-            template = u'\n<td class="artist" rowspan={0}>{1}</td>{2}'
-            ret[0] = template.format(
-                len(ret), artist, ret[0])
-            ret = [indent(i) for i in ret]
+            if ret:
+                template = u'\n<td class="artist" rowspan={0}>{1}</td>{2}'
+                ret[0] = template.format(
+                    len(ret), artist, ret[0])
+                ret = [indent(i) for i in ret]
             return ret
 
         def _status(status, pipelines):
@@ -328,9 +351,21 @@ class Dialog(QDialog, Ui_Dialog):
     def accept(self):
         """Overrride QDialog accept.  """
         path = self.lineEdit.text()
-        Database().info().generate_page(path)
-        url_open(path, isfile=True)
-        self.close()
+        date = self.dateTimeEdit.dateTime().toPython()
+        try:
+            info = Database(since=date).info()
+            info.generate_page(path)
+            url_open(path, isfile=True)
+            self.close()
+        except NoMatchError:
+            QErrorMessage(self).showMessage(u'无匹配条目\n{}')
+
+
+class NoMatchError(Exception):
+    """Indecate no match item on cgtw.  """
+
+    def __str__(self):
+        return u'no match item founded. '
 
 
 if __name__ == '__main__':
