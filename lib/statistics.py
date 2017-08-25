@@ -1,3 +1,4 @@
+#! py -2.7
 # -*- coding=UTF-8 -*-
 """Create statistics sheet for CGTeamWork.
 
@@ -12,12 +13,8 @@ from PySide.QtGui import QFileDialog, QApplication, QDialog, QErrorMessage
 
 from ui_statistics import Ui_Dialog
 
-try:
-    sys.path.append('//SERVER/scripts/NukePlugins/wlf/lib')
-    from wlf.cgtwq import CGTeamWork
-    from wlf.files import get_encoded, url_open
-except ImportError:
-    raise
+from wlf.cgtwq import CGTeamWork
+from wlf.files import get_encoded, url_open
 
 __version__ = '0.4.0'
 
