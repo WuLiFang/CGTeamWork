@@ -1,7 +1,7 @@
 # -*- coding=UTF-8 -*-
 """Create statistics sheet for CGTeamWork.
 
->>> Database('proj_big', 'asset_task').info().write('e:/test/test.json')
+>>> Database('proj_big', 'asset_task').info().generate_page('e:/test/test.html')
 """
 import os
 import json
@@ -15,7 +15,7 @@ try:
 except ImportError:
     raise
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 class Database(CGTeamWork):
@@ -48,6 +48,10 @@ class Database(CGTeamWork):
                                                 [[self.artist_field, '=', name]])
         return Artist(info)
 
+    def serialize(self):
+        """Return serialized information.  """
+        return self.info()
+
 
 class Artist(object):
     """Artist on CGteamwork.  """
@@ -70,8 +74,8 @@ class Artist(object):
     def level_count(self):
         """Return count for each level.  """
         ret = {}
-        ret['finished'] = self.finished_tasks().level_count()
-        ret['working'] = self.working_tasks().level_count()
+        ret['finished'] = self.finished_tasks().level_count(div=True)
+        ret['working'] = self.working_tasks().level_count(div=True)
         return ret
 
     def finished_tasks(self, since=None):
@@ -89,6 +93,10 @@ class Artist(object):
         ret = AssetTasks(task for task in self.tasks if not task.is_approved)
         return ret
 
+    def serialize(self):
+        """Return serialized information.  """
+        return self.level_count()
+
 
 class AssetTasks(list):
     """Multiple asset task."""
@@ -99,18 +107,32 @@ class AssetTasks(list):
             if not isinstance(task, AssetTask):
                 task = AssetTask(task)
             self.append(task)
+        self._pipelines = set(i.pipeline for i in self)
 
-    def level_count(self):
-        """Return count for each level.  """
+    def level_count(self, div=False):
+        """Return count for each level. divide by pipeline if @div.  """
         ret = {}
-        for task in self:
-            level = task.level
-            if not level:
-                level = u'~'
-            level = level.upper()
-            ret.setdefault(level, 0)
-            ret[level] += 1
+        if div:
+            for pipeline in self.pipelines:
+                ret[pipeline] = self.pipeline_tasks(pipeline).level_count()
+        else:
+            for task in self:
+                level = task.level
+                if not level:
+                    level = u'~'
+                level = level.upper()
+                ret.setdefault(level, 0)
+                ret[level] += 1
         return ret
+
+    def pipeline_tasks(self, pipeline):
+        """Return match pipeline tasks.   """
+        return AssetTasks(i for i in self if i.pipeline == pipeline)
+
+    @property
+    def pipelines(self):
+        """Return task pipeline self contained.  """
+        return self._pipelines
 
 
 class AssetTask(object):
@@ -120,7 +142,9 @@ class AssetTask(object):
               'submit_time': 'asset_task.last_submit_time',
               'name': 'asset.asset_name',
               'cn_name': 'asset.cn_name',
-              'status': 'asset_task.status'}
+              'status': 'asset_task.status',
+              'pipeline': 'asset_task.pipeline'}
+
     timef = '%Y-%m-%d %H:%M:%S'
 
     def __init__(self, info):
@@ -134,6 +158,11 @@ class AssetTask(object):
         return self._info[self.fields['level']]
 
     @property
+    def pipeline(self):
+        """Return pipeline of this task"""
+        return self._info[self.fields['pipeline']]
+
+    @property
     def is_approved(self):
         """return if this task has been approved.  """
         return self._info[self.fields['status']] == 'Approve'
@@ -144,6 +173,10 @@ class AssetTask(object):
         str_time = self._info[self.fields['finish_time']]
         if str_time:
             return time.strptime(str_time, self.timef)
+
+
+def indent(text, num=4):
+    return '\n'.join(list(' ' * num + i for i in text.split('\n')))
 
 
 class Info(dict):
@@ -163,8 +196,87 @@ class Info(dict):
 
     def generate_page(self, path):
         """Create html page form info.  """
-        # TODO
-        pass
+
+        def _artist(artist, status):
+            ret = []
+            for k, v in status.items():
+                if not v:
+                    continue
+                ret.extend(_status(k, v))
+            template = u'\n<td class="artist" rowspan={0}>{1}</td>{2}'
+            ret[0] = template.format(
+                len(ret), artist, ret[0])
+            ret = [indent(i) for i in ret]
+            return ret
+
+        def _status(status, pipelines):
+            ret = []
+            for k, v in pipelines.items():
+                if not v:
+                    continue
+                ret.extend(_pipeline(k, v))
+            translate = {
+                u'finished': u'已通过',
+                u'working': u'制作中'
+            }
+
+            template = u'\n<td class="status" rowspan={0}>{1}</td>{2}'
+            ret[0] = template.format(
+                len(ret), translate.get(status, status), ret[0])
+            ret = [indent(i) for i in ret]
+            return ret
+
+        def _pipeline(pipeline, level_count):
+            ret = []
+            levels = sorted(level_count.keys())
+            for level in levels:
+                if not level:
+                    continue
+                ret.extend(_level_count(level, level_count[level]))
+            template = u'\n<td class="pipeline" rowspan={0}>{1}</td>{2}'
+            ret[0] = template.format(
+                len(ret), pipeline, ret[0])
+
+            ret = [indent(i) for i in ret]
+            return ret
+
+        def _level_count(level, amount):
+            template = u'\n<td class="level">{0}</td><td class="amount">{1}</td>'
+            return [indent(template.format(level, amount))]
+
+        rows = []
+        row_template = u'''<tr>
+{}
+</tr>'''
+        for k, v in self.items():
+            _tags = dict.fromkeys(['status', 'pipeline', 'level'], 0)
+            if not v:
+                continue
+            if isinstance(v, Artist):
+                v = v.serialize()
+            new_rows = list(indent(row_template.format(i))
+                            for i in _artist(k, v))
+            rows.extend(new_rows)
+
+        body = '\n'.join(rows)
+
+        template = u'''<body>
+<table>
+<tr>
+<th>姓名</th>
+<th>状态</th>
+<th>工序</th>
+<th>难度级别</th>
+<th>数量</th>
+</tr>
+{}</table>
+</body>'''
+        body = template.format(body)
+        with open(os.path.join(__file__, '../statistics.head.html')) as f:
+            head = f.read()
+        with open(get_encoded(path), 'w') as f:
+            f.write(get_encoded(head + body, 'UTF-8'))
+        self.write(os.path.splitext(path)[0] + '.json')
 
     def write(self, path=None):
         """Write this info to disk.  """
@@ -177,13 +289,7 @@ class InfoEncoder(json.JSONEncoder):
     """JSONEncoder for Info."""
 
     def default(self, o):
-        if isinstance(o, Artist):
-            ret = {}
-            ret['level_count'] = o.level_count()
-            return ret
-        elif isinstance(o, dict):
-            return dict(o)
-        elif isinstance(o, list):
-            return list(o)
-
-        return json.JSONEncoder.default(self, o)
+        try:
+            return o.serialize()
+        except AttributeError:
+            return json.JSONEncoder.default(self, o)
