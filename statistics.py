@@ -268,13 +268,13 @@ class Info(dict):
 
         template = u'''<body>
 <table>
-<tr>
-    <th>姓名</th>
-    <th>状态</th>
-    <th>工序</th>
-    <th>难度级别</th>
-    <th>数量</th>
-</tr>
+    <tr>
+        <th>姓名</th>
+        <th>状态</th>
+        <th>工序</th>
+        <th>难度级别</th>
+        <th>数量</th>
+    </tr>
 {}</table>
 </body>'''
         body = template.format(body)
