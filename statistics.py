@@ -13,7 +13,7 @@ from PySide.QtGui import QFileDialog, QApplication, QDialog, QErrorMessage
 from ui_statistics import Ui_Dialog
 
 try:
-    sys.path.append('//SERVER/scripts/NukePlugins/wlf/py')
+    sys.path.append('//SERVER/scripts/NukePlugins/wlf/lib')
     from wlf.cgtwq import CGTeamWork
     from wlf.files import get_encoded, url_open
 except ImportError:
