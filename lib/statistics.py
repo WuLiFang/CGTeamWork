@@ -16,7 +16,7 @@ from ui_statistics import Ui_Dialog
 from wlf.cgtwq import CGTeamWork
 from wlf.files import get_encoded, url_open
 
-__version__ = '0.4.2'
+__version__ = '0.4.3'
 
 
 class Database(CGTeamWork):
@@ -231,8 +231,9 @@ class Info(dict):
             if not value:
                 pass
             elif isinstance(value, dict):
-                for k, v in value.items():
-                    ret.extend(_rows_generator(k, v, depth=depth + 1))
+                keys = sorted(value.keys())
+                for k in keys:
+                    ret.extend(_rows_generator(k, value[k], depth=depth + 1))
                 if ret:
                     template = u'\n<td class="{class_name}", rowspan={0}>{1}</td>{2}'
                     ret[0] = template.format(
