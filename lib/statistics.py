@@ -16,7 +16,7 @@ from ui_statistics import Ui_Dialog
 from wlf.cgtwq import CGTeamWork
 from wlf.files import get_encoded, url_open
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 
 class Database(CGTeamWork):
@@ -220,68 +220,39 @@ class Info(dict):
 
     def generate_page(self, path):
         """Create html page form info.  """
-        # XXX: maybe can use one function to deal this similar pattern?
 
-        def _artist(artist, status):
+        _classes = ['artist', 'status', 'pipeline', 'level', 'amount']
+
+        def _rows_generator(key, value, depth=0):
             ret = []
-            for k, v in status.items():
-                if not v:
-                    continue
-                ret.extend(_status(k, v))
-            if ret:
-                template = u'\n<td class="artist" rowspan={0}>{1}</td>{2}'
-                ret[0] = template.format(
-                    len(ret), artist, ret[0])
-                ret = [indent(i) for i in ret]
+
+            if not value:
+                pass
+            elif isinstance(value, dict):
+                for k, v in value.items():
+                    ret.extend(_rows_generator(k, v, depth=depth + 1))
+                if ret:
+                    template = u'\n<td class="{class_name}", rowspan={0}>{1}</td>{2}'
+                    ret[0] = template.format(
+                        len(ret), key, ret[0], class_name=_classes[depth])
+                    ret = [indent(i) for i in ret]
+            else:
+                template = u'\n<td class="{class1}">{0}</td><td class="{class2}">{1}</td>'
+                ret = [indent(template.format(
+                    key, value, class1=_classes[depth], class2=_classes[depth + 1]))]
             return ret
-
-        def _status(status, pipelines):
-            ret = []
-            for k, v in pipelines.items():
-                if not v:
-                    continue
-                ret.extend(_pipeline(k, v))
-            translate = {
-                u'finished': u'已通过',
-                u'working': u'制作中'
-            }
-
-            template = u'\n<td class="status" rowspan={0}>{1}</td>{2}'
-            ret[0] = template.format(
-                len(ret), translate.get(status, status), ret[0])
-            ret = [indent(i) for i in ret]
-            return ret
-
-        def _pipeline(pipeline, level_count):
-            ret = []
-            levels = sorted(level_count.keys())
-            for level in levels:
-                if not level:
-                    continue
-                ret.extend(_level_count(level, level_count[level]))
-            template = u'\n<td class="pipeline" rowspan={0}>{1}</td>{2}'
-            ret[0] = template.format(
-                len(ret), pipeline, ret[0])
-
-            ret = [indent(i) for i in ret]
-            return ret
-
-        def _level_count(level, amount):
-            template = u'\n<td class="level">{0}</td><td class="amount">{1}</td>'
-            return [indent(template.format(level, amount))]
 
         rows = []
         row_template = u'''<tr>
 {}
 </tr>'''
         for k, v in self.items():
-            _tags = dict.fromkeys(['status', 'pipeline', 'level'], 0)
             if not v:
                 continue
             if isinstance(v, Artist):
                 v = v.serialize()
             new_rows = list(indent(row_template.format(i))
-                            for i in _artist(k, v))
+                            for i in _rows_generator(k, v))
             rows.extend(new_rows)
 
         body = '\n'.join(rows)
