@@ -16,7 +16,7 @@ from ui_statistics import Ui_Dialog
 from wlf.cgtwq import CGTeamWork
 from wlf.files import get_encoded, url_open
 
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 
 
 class Database(CGTeamWork):
@@ -222,9 +222,11 @@ class Info(dict):
         """Create html page form info.  """
 
         _classes = ['artist', 'status', 'pipeline', 'level', 'amount']
+        translate = {'working': u'制作中', 'finished': u'已通过'}
 
         def _rows_generator(key, value, depth=0):
             ret = []
+            key = translate.get(key) or key
 
             if not value:
                 pass
