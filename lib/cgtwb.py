@@ -3,7 +3,7 @@
 
 import wlf.cgtwq
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class Current(wlf.cgtwq.CGTeamWork):
@@ -56,12 +56,12 @@ class Current(wlf.cgtwq.CGTeamWork):
 
     @property
     def token(self):
-        """Current account id.  """
+        """Current token.  """
         return self._tw.sys().get_token()
 
     @property
     def server_ip(self):
-        """Current account id.  """
+        """Current server ip.  """
         return self._tw.sys().get_server_ip()
 
     def abort(self):
