@@ -9,16 +9,17 @@ import datetime
 
 import cgtwb
 from wlf.files import get_encoded, copy
-from wlf.message import error
+from wlf.notify import error
 from wlf.console import pause
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 class CurrentAssets(cgtwb.Current):
     """Current asset selected from cgtw, mayby multiple item.  """
     fields = {'file': 'asset_task.submit_file_path',
               'aia': 'asset_task.define_iic',
+              'pipeline': 'asset_task.pipeline',
               'name': 'asset.asset_name'}
     files = []
     archive_folder = 'history'
@@ -27,20 +28,36 @@ class CurrentAssets(cgtwb.Current):
         super(CurrentAssets, self).__init__()
         self.task_module.init_with_id(self.selected_ids)
 
-        infos = self.task_module.get(
-            [self.fields['file'], self.fields['name']])
+        infos = self.task_module.get(self.fields.values())
         self.files = []
         for info in infos:
             file_info = info[self.fields['file']]
             if file_info:
                 files = json.loads(file_info).get('path')
+
                 if not files:
                     error(u'{}找不到提交文件'.format(info[self.fields['name']]))
                     raise ValueError('Submit file not found')
+
+                # Prepare sign directory
+                sign = u'{}_ok'.format(info[self.fields['pipeline']])
+                try:
+                    sign_dir = [dir_info for dir_info in self.task_module.get_dir(
+                        [sign]) if dir_info['id'] == info['id']][0][sign]
+                except (IndexError, TypeError):
+                    sign_dir = None
+
+                # Try same directory
                 for i in files:
                     try:
                         self.files.append(get_ok_file(i))
                     except NoMatchError:
+                        if sign_dir:
+                            filename = os.path.join(
+                                sign_dir, os.path.basename(i))
+                            if os.path.exists(get_encoded(filename)):
+                                self.files.append(filename)
+                                continue
                         error(u'找不到 {} 对应的ok文件'.format(i), 'NoMatch')
                         continue
             else:
@@ -105,6 +122,7 @@ class NoMatchError(Exception):
 def main():
     """Get plugin setting from cgtw.  """
 
+    print('AIA_manage v{}'.format(__version__))
     assets = CurrentAssets()
     operation = assets.sys_module.get_argv_key('operation')
     if operation == 'checkin':
