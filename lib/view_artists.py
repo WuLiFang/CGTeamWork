@@ -2,9 +2,9 @@
 """View artist of selected shot.  """
 
 from cgtwb import Current
-from wlf.notify import message
+from wlf.notify import message_box
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class CurrentShotTasks(Current):
@@ -46,7 +46,10 @@ class CurrentShotTasks(Current):
             msg += u'\n'.join([u'{}: {}'.format(pipeline, info[pipeline])
                                for pipeline in info])
             msg += u'\n\n'
-        message(msg)
+        if len(msg) < 300:
+            message_box(msg)
+        else:
+            message_box(u'制作人员信息见detail', msg)
 
 
 if __name__ == '__main__':
