@@ -70,7 +70,8 @@ class CurrentItems(cgtwb.Current):
 </style>'''
         note += u'<h1>日期变更</h1><table>'
         data_dict = {self.fields[k]: self.l10n(v) for k, v in dates.items()}
-        note += u'\n'.join(sorted([u'<!--{1}--><tr><td>{0}</td><td>-><td><td>{1}</td><tr>'.format(self.l10n(k), self.l10n(v))
+        _tr = u'<!--{1}--><tr><td>{0}</td><td>-><td><td>{1}</td><tr>'
+        note += u'\n'.join(sorted([_tr.format(self.l10n(k), self.l10n(v))
                                    for k, v in dates.items()]))
         note += '</table>'
         remark_fields = ['first_submit', 'last_submit', 'finish_time']
@@ -80,7 +81,8 @@ class CurrentItems(cgtwb.Current):
             info = self.task_module.get(
                 [self.fields[i] for i in remark_fields])[0]
             remark = u'<br>'.join([u'{}: {}'.format(
-                self.l10n(field), self.l10n(info.get(self.fields[field]))) for field in remark_fields])
+                self.l10n(field),
+                self.l10n(info.get(self.fields[field]))) for field in remark_fields])
             self.add_note(
                 u'{}<hr><h2>当前状态:</h2>{}'.format(note, remark))
 
