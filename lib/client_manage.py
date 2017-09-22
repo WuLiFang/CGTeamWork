@@ -2,12 +2,17 @@
 """AIA check-in & check-out."""
 from __future__ import unicode_literals
 import datetime
+import logging
 
-import cgtwb
 from wlf.notify import error
 from wlf.timedelta import strf_timedelta, parse_timedelta
 
-__version__ = '0.1.1'
+import cgtwb
+
+__version__ = '0.1.2'
+LOGGER = logging.getLogger()
+LOGGER.addHandler(logging.StreamHandler())
+LOGGER.setLevel(logging.DEBUG)
 
 
 class CurrentItems(cgtwb.Current):
@@ -34,13 +39,18 @@ class CurrentItems(cgtwb.Current):
         if self.module == 'asset_task':
             self.fields.update(self.asset_task_fields)
         self.fields = {k: v.format(self) for k, v in self.fields.items()}
+        LOGGER.debug('初始化')
+        LOGGER.debug('选中的id %s', self.selected_ids)
+        if not self.selected_ids:
+            LOGGER.error('不能获取选中id')
+            raise ValueError('No selected_ids')
 
     def approve(self):
         """Set file read-only and set aia status to approve the archive it.  """
 
         self.task_module.init_with_id(self.selected_ids)
         successed = self.task_module.set({self.fields['client']: 'Approve'})
-        print('set approve successed', successed)
+        LOGGER.info('set approve successed: %s', successed)
         if not successed:
             error(u'设置client属性不成功')
         self.set_retake_record('approve')
@@ -49,7 +59,7 @@ class CurrentItems(cgtwb.Current):
         """Set current file writable and set aia status to waiting."""
         self.task_module.init_with_id(self.selected_ids)
         successed = self.task_module.set({self.fields['client']: 'Retake'})
-        print('set retake successed', successed)
+        LOGGER.info('set retake successed: %s', successed)
         if not successed:
             error(u'设置client属性不成功')
         self.set_retake_record('retake')
@@ -69,8 +79,7 @@ class CurrentItems(cgtwb.Current):
 
         for item_id in self.selected_ids:
             item_info = [i for i in info if i['id'] == item_id][0]
-            data = {[i for i in self.fields if self.fields[i] == k][0]
-                : v for k, v in item_info.items() if k in cgtw_fields}
+            data = {[i for i in self.fields if self.fields[i] == k][0]                    : v for k, v in item_info.items() if k in cgtw_fields}
 
             # Retake record
             if data['retake_record']:
@@ -97,13 +106,16 @@ class CurrentItems(cgtwb.Current):
                 last_retake_cost = now - \
                     self.parse_datetime(data['last_retake_time'])
                 data['last_retake_cost'] = strf_timedelta(last_retake_cost)
-                total_retake_cost = parse_timedelta(
-                    data['total_retake_cost']) + last_retake_cost
+                if data['total_retake_cost']:
+                    total_retake_cost = parse_timedelta(
+                        data['total_retake_cost']) + last_retake_cost
+                else:
+                    total_retake_cost = last_retake_cost
                 data['total_retake_cost'] = strf_timedelta(total_retake_cost)
 
             self.task_module.init_with_id(item_id)
             data = {self.fields[k]: v for k, v in data.items()if v}
-            print(data)
+            LOGGER.debug('set data %s', data)
             self.task_module.set(data)
 
     def l10n(self, text):
