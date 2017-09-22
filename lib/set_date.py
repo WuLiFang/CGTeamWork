@@ -9,7 +9,7 @@ from wlf.Qt.QtWidgets import QDialog, QApplication, QTableWidgetItem
 
 import cgtwb
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class CurrentItems(cgtwb.Current):
@@ -113,12 +113,6 @@ class Dialog(QDialog):
         QtCompat.loadUi(os.path.abspath(
             os.path.join(__file__, '../set_date.ui')), self)
 
-        self._date_edits = {
-            self.dateEditStartDate: 'start_date',
-            self.dateEditEndDate: 'end_date',
-            self.dateEditDeadline: 'deadline'
-        }
-
         today = datetime.date.today()
         self.dateEditStartDate.setDate(today)
         self.dateEditEndDate.setDate(today + datetime.timedelta(days=5))
@@ -140,10 +134,13 @@ class Dialog(QDialog):
 
     def accept(self):
         """Overrride QDialog accept.  """
-        dates = {}
-        for i in [self.dateEditStartDate, self.dateEditEndDate, self.dateEditDeadline]:
-            if i.isEnabled():
-                dates[self._date_edits[i]] = i.date().toPython()
+        edits = {
+            self.dateEditStartDate: 'start_date',
+            self.dateEditEndDate: 'end_date',
+            self.dateEditDeadline: 'deadline'
+        }
+        dates = {field: edit.date().toPython()
+                 for edit, field in edits.items() if edit.isEnabled()}
 
         self._items.set_dates(dates)
         self.close()
