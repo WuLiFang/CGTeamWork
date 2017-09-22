@@ -1,5 +1,5 @@
 # -*- coding=UTF-8 -*-
-"""AIA check-in & check-out."""
+"""Client status manage.  """
 from __future__ import unicode_literals
 import datetime
 import logging
@@ -39,7 +39,6 @@ class CurrentItems(cgtwb.Current):
         if self.module == 'asset_task':
             self.fields.update(self.asset_task_fields)
         self.fields = {k: v.format(self) for k, v in self.fields.items()}
-        LOGGER.debug('初始化')
         LOGGER.debug('选中的id %s', self.selected_ids)
         if not self.selected_ids:
             LOGGER.error('不能获取选中id')
@@ -139,6 +138,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # CurrentItems().retake()
-    # CurrentItems().approve()
     main()
