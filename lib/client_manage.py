@@ -7,7 +7,7 @@ import cgtwb
 from wlf.notify import error
 from wlf.timedelta import strf_timedelta, parse_timedelta
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class CurrentItems(cgtwb.Current):
@@ -45,19 +45,32 @@ class CurrentItems(cgtwb.Current):
             error(u'设置client属性不成功')
         self.set_retake_record('approve')
 
+    def retake(self):
+        """Set current file writable and set aia status to waiting."""
+        self.task_module.init_with_id(self.selected_ids)
+        successed = self.task_module.set({self.fields['client']: 'Retake'})
+        print('set retake successed', successed)
+        if not successed:
+            error(u'设置client属性不成功')
+        self.set_retake_record('retake')
+
     def set_retake_record(self, record_name):
         """Set retake record field."""
         fields = ['retake_record', 'first_retake_time', 'last_retake_time',
                   'last_retake_cost', 'total_retake_cost', 'client_retake_count']
         cgtw_fields = [self.fields[i] for i in fields]
-        if not self.task_module.init_with_id(self.selected_ids):
-            error('缺少字段, 未能记录额外信息。\n 需要模块包含以下字段:\n%s' % '\n'.join(fields))
-            return
+        self.task_module.init_with_id(self.selected_ids)
 
         info = self.task_module.get(cgtw_fields)
+        if info is False:
+            error('缺少字段, 未能记录额外信息。<br> 需要模块包含以下字段:<br>%s' %
+                  '<br>'.join(fields))
+            return
+
         for item_id in self.selected_ids:
             item_info = [i for i in info if i['id'] == item_id][0]
-            data = {[i for i in self.fields if self.fields[i] == k][0]                    : v for k, v in item_info.items() if k in cgtw_fields}
+            data = {[i for i in self.fields if self.fields[i] == k][0]
+                : v for k, v in item_info.items() if k in cgtw_fields}
 
             # Retake record
             if data['retake_record']:
@@ -99,15 +112,6 @@ class CurrentItems(cgtwb.Current):
             return text.strftime('%x.%H')
 
         return self.l10n_dict.get(text, text)
-
-    def retake(self):
-        """Set current file writable and set aia status to waiting."""
-        self.task_module.init_with_id(self.selected_ids)
-        successed = self.task_module.set({self.fields['client']: 'Retake'})
-        print('set retake successed', successed)
-        if not successed:
-            error(u'设置client属性不成功')
-        self.set_retake_record('retake')
 
 
 def main():
