@@ -3,11 +3,14 @@
 
 import wlf.cgtwq
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 
 class Current(wlf.cgtwq.CGTeamWork):
     """Warpper for cgtw.tw().sys() module. """
+
+    def __len__(self):
+        return len(self.selected_ids)
 
     @property
     def database(self):
