@@ -4,3 +4,8 @@ build/
 
 # vscode
 .vscode/
+
+# Third party libraries
+/lib/jdcal.py
+/lib/openpyxl/
+/lib/et_xmlfile/
