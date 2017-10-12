@@ -2,16 +2,19 @@
 """Base module for plugins develop."""
 
 from __future__ import print_function, unicode_literals
+import logging
 
 import wlf.cgtwq
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
+LOGGER = logging.getLogger('cgtwb')
 
 
 class Current(wlf.cgtwq.CGTeamWork):
     """Warpper for cgtw.tw().sys() module. """
 
     instance = None
+    pipeline_shots = None
 
     def __new__(cls):
         if not cls.instance:
@@ -92,4 +95,29 @@ class Current(wlf.cgtwq.CGTeamWork):
     def is_shot(self, value):
         """Return if @value is a shot_name.  """
 
-        return self.task_module.init_with_filter([[self.SIGNS['shot'], '=', value]])
+        ret = None
+
+        if self.pipeline and self.pipeline_shots is None:
+            shots = set()
+            filters = []
+            for i in self.pipeline:
+                filters.append([self.SIGNS['pipeline'], '=', i])
+                filters.append('or')
+            filters = filters[:-1]
+            initiadted = self.task_module.init_with_filter(filters)
+            if initiadted:
+                infos = self.task_module.get([self.SIGNS['shot']])
+                _ = [shots.add(i[self.SIGNS['shot']]) for i in infos]
+            else:
+                LOGGER.warning(
+                    'Can not initiate with pipeline: %s', self.pipeline)
+            self.pipeline_shots = shots
+
+        if self.pipeline_shots:
+            ret = value in self.pipeline_shots
+
+        if ret is None:
+            ret = self.task_module.init_with_filter(
+                [[self.SIGNS['shot'], '=', value]])
+
+        return ret
