@@ -15,7 +15,7 @@ from wlf.notify import Progress, CancelledError
 
 from cgtwb import Current
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 LOGGER = logging.getLogger()
 
@@ -76,6 +76,14 @@ class Noter(object):
     def __init__(self):
         super(Noter, self).__init__()
         self.shot_note = {}
+        self.current = Current()
+        pipeline = self.current.pipeline
+        if pipeline and len(pipeline) == 1:
+            self.pipeline = list(pipeline)[0]
+        else:
+            # TODO: Ask pipeline
+            self.pipeline = None
+        LOGGER.info('备注将添加至流程: %s', self.pipeline)
 
     def parse_file(self, filename):
         """Read info from file.  """
@@ -94,7 +102,7 @@ class Noter(object):
         for shot_name in shot_names:
             note = self.shot_note[shot_name]
             if note:
-                shot = Shot(shot_name)
+                shot = Shot(shot_name, pipeline=self.pipeline)
                 if shot.add_note(note, distinct=True):
                     LOGGER.info('%s:添加备注', shot_name)
                 else:
@@ -103,11 +111,15 @@ class Noter(object):
 
 
 def main():
+    print('{:-^50}'.format('导入备注 v{}'.format(__version__)))
     dummy = QApplication(sys.argv)
     noter = Noter()
 
     filename, _ = QFileDialog.getOpenFileName(
         None, caption='选择要读取的文件…', filter='*.xlsx')
+
+    if not filename:
+        return
 
     try:
         noter.parse_file(filename)

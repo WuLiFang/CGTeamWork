@@ -5,13 +5,27 @@ from __future__ import print_function, unicode_literals
 
 import wlf.cgtwq
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 
 class Current(wlf.cgtwq.CGTeamWork):
     """Warpper for cgtw.tw().sys() module. """
 
-    sign_shot_name = 'shot.shot'
+    instance = None
+
+    def __new__(cls):
+        if not cls.instance:
+            cls.instance = super(Current, cls).__new__(cls)
+        return cls.instance
+
+    def __init__(self):
+        super(Current, self).__init__()
+        self.task_module.init_with_id(self.selected_ids)
+
+        self.pipeline = set()
+        infos = self.task_module.get([self.SIGNS['pipeline']])
+        if infos:
+            _ = [self.pipeline.add(i[self.SIGNS['pipeline']]) for i in infos]
 
     def __len__(self):
         return len(self.selected_ids)
@@ -78,4 +92,4 @@ class Current(wlf.cgtwq.CGTeamWork):
     def is_shot(self, value):
         """Return if @value is a shot_name.  """
 
-        return self.task_module.init_with_filter([['shot.shot', '=', value]])
+        return self.task_module.init_with_filter([[self.SIGNS['shot'], '=', value]])
