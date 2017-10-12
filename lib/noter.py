@@ -15,10 +15,9 @@ from wlf.notify import Progress, CancelledError
 
 from cgtwb import Current
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 LOGGER = logging.getLogger()
-
 
 if __name__ == '__main__':
     set_basic_logger()
@@ -36,11 +35,18 @@ class XLSXParser(object):
 
         rows = tuple(self.worksheet.rows)
         task = Progress('分析表格', total=len(rows))
+        data_begin = False
         for row in rows:
             shot, note = self.parse_row(row)
             task.step(shot)
             if shot is None:
+                if not data_begin:
+                    LOGGER.info('忽略顶部行: %s', row[0].row)
+                else:
+                    Noter.warn_count += 1
+                    LOGGER.warning('行不能识别: %s', row[0].row)
                 continue
+            data_begin = True
             if result.has_key(shot):
                 result[shot] += note
             else:
@@ -72,6 +78,8 @@ class XLSXParser(object):
 
 class Noter(object):
     """Note adding helper.  """
+    warn_count = 0
+    error_count = 0
 
     def __init__(self):
         super(Noter, self).__init__()
@@ -124,7 +132,13 @@ def main():
     try:
         noter.parse_file(filename)
         noter.execute()
-        pause()
+        if Noter.warn_count or Noter.error_count:
+            LOGGER.info('中途发生异常: %s 个错误 %s 个警告',
+                        Noter.error_count, Noter.warn_count)
+            print('\n请检查上方日志\n')
+            pause(0)
+        else:
+            pause()
     except CancelledError:
         LOGGER.info('用户取消')
 
