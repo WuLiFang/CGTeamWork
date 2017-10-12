@@ -1,13 +1,17 @@
 # -*- coding=UTF-8 -*-
 """Base module for plugins develop."""
 
+from __future__ import print_function, unicode_literals
+
 import wlf.cgtwq
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 
 class Current(wlf.cgtwq.CGTeamWork):
     """Warpper for cgtw.tw().sys() module. """
+
+    sign_shot_name = 'shot.shot'
 
     def __len__(self):
         return len(self.selected_ids)
@@ -70,3 +74,8 @@ class Current(wlf.cgtwq.CGTeamWork):
     def abort(self):
         """Tell cgtw abort execution.  """
         self._tw.sys().set_return_data(False)
+
+    def is_shot(self, value):
+        """Return if @value is a shot_name.  """
+
+        return self.task_module.init_with_filter([['shot.shot', '=', value]])
