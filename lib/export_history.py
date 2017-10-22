@@ -6,6 +6,7 @@ from __future__ import print_function, unicode_literals
 import logging
 import os
 import sys
+import webbrowser
 
 from bs4 import BeautifulSoup
 
@@ -19,7 +20,7 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class CurrentHistory(RowTable):
@@ -88,6 +89,7 @@ def main():
         None, '保存位置', 'E:/exported_history.xlsx', '*.xlsx')
     if filename:
         CurrentHistory().to_xlsx(filename)
+        webbrowser.open(os.path.dirname(filename))
 
 
 if __name__ == '__main__':
