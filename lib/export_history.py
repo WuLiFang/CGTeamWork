@@ -10,17 +10,18 @@ import webbrowser
 
 from bs4 import BeautifulSoup
 
-from cgtwb import Current
 from wlf.mp_logging import set_basic_logger
 from wlf.table import RowTable
-
 from wlf.Qt.QtWidgets import QApplication, QFileDialog
+from wlf.notify import Progress, CancelledError
+
+from cgtwb import Current
 
 LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 
 class CurrentHistory(RowTable):
@@ -38,10 +39,12 @@ class CurrentHistory(RowTable):
         self.task_module.init_with_id([i['task_id'] for i in self.infos])
 
         self.task_infos = self.task_module.get([signs['name']])
+        task = Progress('获取信息', total=len(self.infos))
         for info in self.infos:
             info.update(self.parse_html_to_xls(info['text']))
             info['name'] = self.get_task_info(info['task_id'], signs['name'])
             self.append(info)
+            task.step(info['name'])
 
         self.header.sort(key=lambda x:
                          (x != 'name', x != 'text', not x.startswith('ref_image'), x))
@@ -88,8 +91,11 @@ def main():
     filename, _ = QFileDialog.getSaveFileName(
         None, '保存位置', 'E:/exported_history.xlsx', '*.xlsx')
     if filename:
-        CurrentHistory().to_xlsx(filename)
-        webbrowser.open(os.path.dirname(filename))
+        try:
+            CurrentHistory().to_xlsx(filename)
+            webbrowser.open(os.path.dirname(filename))
+        except CancelledError:
+            LOGGER.info('用户取消')
 
 
 if __name__ == '__main__':
