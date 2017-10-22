@@ -4,17 +4,19 @@
 from __future__ import print_function, unicode_literals
 import logging
 
-import wlf.cgtwq
+from wlf.cgtwq import CGTeamWork
 
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 LOGGER = logging.getLogger('cgtwb')
 
 
-class Current(wlf.cgtwq.CGTeamWork):
+class Current(CGTeamWork):
     """Warpper for cgtw.tw().sys() module. """
 
     instance = None
     pipeline_shots = None
+    _task_names = None
+    _pipeline = None
 
     def __new__(cls):
         if not cls.instance:
@@ -24,11 +26,6 @@ class Current(wlf.cgtwq.CGTeamWork):
     def __init__(self):
         super(Current, self).__init__()
         self.task_module.init_with_id(self.selected_ids)
-
-        self.pipeline = set()
-        infos = self.task_module.get([self.SIGNS['pipeline']])
-        if infos:
-            _ = [self.pipeline.add(i[self.SIGNS['pipeline']]) for i in infos]
 
     def __len__(self):
         return len(self.selected_ids)
@@ -87,6 +84,27 @@ class Current(wlf.cgtwq.CGTeamWork):
     def server_ip(self):
         """Current server ip.  """
         return self._tw.sys().get_server_ip()
+
+    @property
+    def task_names(self):
+        """List of current selected task.  """
+
+        if self._task_names is None:
+            self._task_names = [i[self.signs['name']]
+                                for i in self.task_module.get([self.signs['name']])]
+        return self._task_names
+
+    @property
+    def pipeline(self):
+        """Pipeline set of current selected task.  """
+
+        if self._pipeline is None:
+            pipeline = set()
+            infos = self.task_module.get([self.SIGNS['pipeline']])
+            if infos:
+                _ = [pipeline.add(i[self.SIGNS['pipeline']]) for i in infos]
+            self._pipeline = pipeline
+        return self._pipeline
 
     def abort(self):
         """Tell cgtw abort execution.  """
