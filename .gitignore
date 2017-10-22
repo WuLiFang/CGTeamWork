@@ -9,3 +9,4 @@ build/
 /lib/jdcal.py
 /lib/openpyxl/
 /lib/et_xmlfile/
+/lib/bs4/
