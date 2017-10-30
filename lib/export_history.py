@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 import webbrowser
+import unittest
 
 from bs4 import BeautifulSoup
 
@@ -21,11 +22,24 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.1.2'
+__version__ = '0.2.0'
 
 
 class CurrentHistory(RowTable):
     """Retake/Approve history of current module.  """
+
+    l10n_dict = {
+        '^note$': '备注',
+        '^text$': '文本',
+        '^name$': '名称',
+        r'^image(\d*)': r'图片\1',
+        '^time$': '时间',
+        '^step$': '流程',
+        '^Approve$': '通过',
+        '^Retake$': '返修',
+        '^status$': '状态',
+        '^artist$': '制作者',
+    }
 
     def __init__(self):
         super(CurrentHistory, self).__init__()
@@ -38,16 +52,58 @@ class CurrentHistory(RowTable):
 
         self.task_module.init_with_id([i['task_id'] for i in self.infos])
 
-        self.task_infos = self.task_module.get([signs['name']])
-        task = Progress('获取信息', total=len(self.infos))
-        for info in self.infos:
-            info.update(self.parse_html_to_xls(info['text']))
-            info['name'] = self.get_task_info(info['task_id'], signs['name'])
-            self.append(info)
-            task.step(info['name'])
+        self.task_infos = self.task_module.get(
+            [signs['name'], signs['artist']])
 
-        self.header.sort(key=lambda x:
-                         (x != 'name', x != 'text', not x.startswith('ref_image'), x))
+        task = Progress('获取信息', total=len(self.infos))
+        task_infos = {}
+        for info in self.infos:
+            if not info:
+                continue
+            name = self.get_task_info(info['task_id'], signs['name'])
+            task_infos.setdefault(name, {})
+            task_info = task_infos[name]
+            step = info['step']
+            task_info.setdefault(step, {})
+            records = task_info[step]
+            record_name = 'record_{:02d}'.format(len(records) + 1)
+            records.setdefault(record_name, {})
+            record = records[record_name]
+
+            task_info['name'] = name
+            task_info['artist'] = self.get_task_info(
+                info['task_id'], signs['artist'])
+
+            record.update(self.parse_html_to_xls(info['text']))
+            record['time'] = info['time']
+            record['status'] = info['status']
+
+            task.step(name)
+
+        for key in sorted(task_infos.keys()):
+            self.append(task_infos[key])
+
+        def _get_row(header, index):
+            ret = header
+            try:
+                for _ in range(index):
+                    ret = ret[1]
+                ret = ret[0]
+            except IndexError:
+                ret = None
+            return ret
+
+        self.header.sort(key=lambda x: (x[0] != 'name',
+                                        x[0] != 'artist',
+                                        x[0] != '组长状态',
+                                        x[0] != '导演状态',
+                                        x[0] != '客户状态',
+                                        x[0] != 'AIA',
+                                        _get_row(x, 1),
+                                        _get_row(x, 2) != 'status',
+                                        _get_row(x, 2) != 'text',
+                                        _get_row(x, 2) == 'time',
+                                        x))
 
     def get_task_info(self, task_id, name, default=None):
         """Get task info by @task_id and info @name.  """
@@ -79,9 +135,10 @@ class CurrentHistory(RowTable):
                 xls_func = u'=HYPERLINK("{}","[{}]")'.format(
                     link, os.path.basename(link))
 
-                ret['ref_image_{}'.format(index)] = xls_func
+                ret['image_{}'.format(index)] = xls_func
             value = value or '[仅有图片]'
         ret['text'] = value
+
         return ret
 
 
@@ -98,5 +155,11 @@ def main():
             LOGGER.info('用户取消')
 
 
+class TestCase(unittest.TestCase):
+    def test_1(self):
+        CurrentHistory().to_xlsx('E:/test/test_export.xlsx')
+
+
 if __name__ == '__main__':
     main()
+    # unittest.main()
