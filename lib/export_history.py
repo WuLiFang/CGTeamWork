@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 from wlf.mp_logging import set_basic_logger
 from wlf.table import RowTable
 from wlf.Qt.QtWidgets import QApplication, QFileDialog
-from wlf.notify import Progress, CancelledError, error
+from wlf.notify import Progress, CancelledError
 
 from cgtwb import Current
 
@@ -22,7 +22,7 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.2.2'
+__version__ = '0.2.1'
 
 
 class CurrentHistory(RowTable):
@@ -47,15 +47,9 @@ class CurrentHistory(RowTable):
         self.current = Current()
         self.task_module = self.current.task_module
         signs = self.current.signs
-        selected_ids = self.current.selected_ids
         self.infos = self.current.history_module.get_with_filter(
             ['time', 'text', 'status', '#account_id', '#task_id', 'step'],
             [['status', '=', 'Retake'], 'or', ['status', '=', 'Approve']])
-
-        self.infos = [i for i in self.infos if i['task_id'] in selected_ids]
-        if not self.infos:
-            error('所选条目没有历史')
-            raise ValueError(selected_ids, [i['task_id'] for i in self.infos])
 
         self.task_module.init_with_id([i['task_id'] for i in self.infos])
 
