@@ -22,7 +22,7 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 
 class CurrentHistory(RowTable):
@@ -35,6 +35,7 @@ class CurrentHistory(RowTable):
         r'^image(\d*)': r'图片\1',
         '^time$': '时间',
         '^step$': '流程',
+        '^pipeline$': '制作阶段',
         '^Approve$': '通过',
         '^Retake$': '返修',
         '^status$': '状态',
@@ -53,7 +54,7 @@ class CurrentHistory(RowTable):
         self.task_module.init_with_id([i['task_id'] for i in self.infos])
 
         self.task_infos = self.task_module.get(
-            [signs['name'], signs['artist']])
+            [signs['name'], signs['artist'], signs['pipeline']])
 
         task = Progress('获取信息', total=len(self.infos))
         task_infos = {}
@@ -61,8 +62,9 @@ class CurrentHistory(RowTable):
             if not info:
                 continue
             name = self.get_task_info(info['task_id'], signs['name'])
-            task_infos.setdefault(name, {})
-            task_info = task_infos[name]
+            pipeline = self.get_task_info(info['task_id'], signs['pipeline'])
+            task_infos.setdefault((name, pipeline), {})
+            task_info = task_infos[(name, pipeline)]
             step = info['step']
             task_info.setdefault(step, {})
             records = task_info[step]
@@ -71,6 +73,7 @@ class CurrentHistory(RowTable):
             record = records[record_name]
 
             task_info['name'] = name
+            task_info['pipeline'] = pipeline
             task_info['artist'] = self.get_task_info(
                 info['task_id'], signs['artist'])
 
@@ -94,6 +97,7 @@ class CurrentHistory(RowTable):
             return ret
 
         self.header.sort(key=lambda x: (x[0] != 'name',
+                                        x[0] != 'pipeline',
                                         x[0] != 'artist',
                                         x[0] != '组长状态',
                                         x[0] != '导演状态',
