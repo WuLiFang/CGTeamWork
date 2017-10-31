@@ -22,7 +22,7 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 
 class CurrentHistory(RowTable):
@@ -44,21 +44,25 @@ class CurrentHistory(RowTable):
 
     def __init__(self):
         super(CurrentHistory, self).__init__()
-        self.current = Current()
-        self.task_module = self.current.task_module
-        signs = self.current.signs
-        self.infos = self.current.history_module.get_with_filter(
+        current = Current()
+        task_module = current.task_module
+        signs = current.signs
+
+        infos = current.history_module.get_with_filter(
             ['time', 'text', 'status', '#account_id', '#task_id', 'step'],
-            [['status', '=', 'Retake'], 'or', ['status', '=', 'Approve']])
+            [['status', '=', 'Approve'], 'or', ['status', '=', 'Retake']])
 
-        self.task_module.init_with_id([i['task_id'] for i in self.infos])
+        if not isinstance(infos, list):
+            raise ValueError(infos)
 
-        self.task_infos = self.task_module.get(
+        task_module.init_with_id([i['task_id'] for i in infos])
+
+        self.task_infos = task_module.get(
             [signs['name'], signs['artist'], signs['pipeline']])
 
-        task = Progress('获取信息', total=len(self.infos))
+        task = Progress('获取信息', total=len(infos))
         task_infos = {}
-        for info in self.infos:
+        for info in infos:
             if not info:
                 continue
             name = self.get_task_info(info['task_id'], signs['name'])
@@ -128,7 +132,7 @@ class CurrentHistory(RowTable):
         ret = {}
         if images:
             for i in images:
-                link = u'http://{}/{}'.format(self.current.server_ip,
+                link = u'http://{}/{}'.format(Current().server_ip,
                                               i.get('src'))
                 links.append(link)
         value = soup.get_text(strip=True).replace(
