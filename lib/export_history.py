@@ -22,7 +22,7 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 
 class CurrentHistory(RowTable):
@@ -48,11 +48,15 @@ class CurrentHistory(RowTable):
         task_module = current.task_module
         signs = current.signs
 
-        filters = []
-        for i in current.selected_ids:
-            filters.append(['#task_id', '=', i])
-            filters.append('or')
-        filters.pop(-1)
+        if current.get_argv('selected_only'):
+            filters = []
+            for i in current.selected_ids:
+                filters.append(['#task_id', '=', i])
+                filters.append('or')
+            filters.pop(-1)
+        else:
+            filters = [['status', '=', 'Retake'],
+                       'or', ['status', '=', 'Approve']]
 
         infos = current.history_module.get_with_filter(
             ['time', 'text', 'status', '#account_id', '#task_id', 'step'],
