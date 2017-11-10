@@ -22,7 +22,7 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 
 
 class CurrentHistory(RowTable):
@@ -170,6 +170,9 @@ def main():
         try:
             CurrentHistory().to_xlsx(filename)
             webbrowser.open(os.path.dirname(filename))
+        except IOError:
+            LOGGER.error('不能写入文件: %s', filename)
+            message_box('不能写入文件: {}, 请检查文件占用'.format(filename))
         except CancelledError:
             LOGGER.info('用户取消')
 
