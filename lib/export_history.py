@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 from wlf.mp_logging import set_basic_logger
 from wlf.table import RowTable
 from wlf.Qt.QtWidgets import QApplication, QFileDialog
-from wlf.notify import Progress, CancelledError
+from wlf.notify import Progress, CancelledError, message_box
 
 from cgtwb import Current
 
@@ -22,7 +22,7 @@ LOGGER = logging.getLogger()
 if __name__ == '__main__':
     set_basic_logger()
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 
 class CurrentHistory(RowTable):
@@ -60,6 +60,11 @@ class CurrentHistory(RowTable):
 
         if not isinstance(infos, list):
             raise ValueError(infos)
+
+        infos = [i for i in infos if i['status'] in ('Retake', 'Approve')]
+        if not infos:
+            message_box('所选条目没有返修历史')
+            raise ValueError
 
         task_module.init_with_id([i['task_id'] for i in infos])
 
