@@ -6,7 +6,7 @@ import logging
 
 from wlf.cgtwq import CGTeamWork
 
-__version__ = '0.1.7'
+__version__ = '0.1.8'
 LOGGER = logging.getLogger('cgtwb')
 
 
@@ -79,11 +79,6 @@ class Current(CGTeamWork):
     def token(self):
         """Current token.  """
         return self.sys_module.get_token()
-
-    @property
-    def server_ip(self):
-        """Current server ip.  """
-        return self.sys_module.get_server_ip()
 
     @property
     def task_names(self):
