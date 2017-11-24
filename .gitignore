@@ -5,6 +5,9 @@ build/
 # vscode
 .vscode/
 
+# venv
+/.venv
+
 # Third party libraries
 /lib/jdcal.py
 /lib/openpyxl/
