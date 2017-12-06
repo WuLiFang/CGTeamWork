@@ -13,3 +13,4 @@ build/
 /lib/openpyxl/
 /lib/et_xmlfile/
 /lib/bs4/
+/lib/psutil/
