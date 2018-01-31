@@ -6,19 +6,30 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
-import sys
 import webbrowser
 
-from Qt import QtCompat, QtWidgets
-from Qt.QtWidgets import QRadioButton
+from Qt import QtCompat
+from Qt.QtWidgets import QDialog, QFileDialog, QRadioButton
 
 from cgtwb import Current
 from wlf.files import copy, is_same
 from wlf.notify import CancelledError, progress
 from wlf.path import get_unicode as u
-from wlf.path import Path
+from wlf.path import Path, PurePath
+from wlf.uitools import main_show_dialog
+from wlf.config import Config as BaseConfig
 
 SUBMIT_FILE = 1 << 0
+
+
+class Config(BaseConfig):
+    """Downloader config.  """
+
+    default = {'OUTPUT_DIR': 'E:/cgtw_download'}
+    path = os.path.expanduser(u'~/.wlf/.downloader.json')
+
+
+CONFIG = Config()
 
 
 class ServerFiles(set):
@@ -56,11 +67,15 @@ class ServerFiles(set):
         super(ServerFiles, self).__init__(files)
 
     def compare_with(self, local_dir):
-        for i in list(self):
+        """Check if file already dowanloaded to @local_dir.  """
+
+        for i in progress(list(self), '比较文件修改日期'):
             assert isinstance(i, ServerFile)
             i.is_updated = i in Path(local_dir).iterdir()
 
     def new_files(self):
+        """Not dowanloaded files.  """
+
         return sorted(i for i in self if not i.is_updated)
 
 
@@ -73,10 +88,12 @@ class ServerFile(unicode):
         self.is_updated = False
 
     def __eq__(self, other):
+        if PurePath(other).name != PurePath(self.path).name:
+            return False
         return is_same(self.path, other)
 
 
-class Dialog(QtWidgets.QDialog):
+class Dialog(QDialog):
     """Main dialog.  """
 
     def __init__(self):
@@ -85,6 +102,9 @@ class Dialog(QtWidgets.QDialog):
         self.current = Current()
         self.file_sets = {}
         self._files = ServerFiles()
+
+        # Recover from config.
+        self.dir = CONFIG['OUTPUT_DIR']
 
         # Add radio buttons.
         buttons = []
@@ -103,9 +123,6 @@ class Dialog(QtWidgets.QDialog):
             lambda status: self.on_radio_toggled(SUBMIT_FILE, status))
         self.lineEditDir.editingFinished.connect(self.autoset)
         self.checkBoxSkipSame.toggled.connect(self.update_list_widget)
-
-        # Set config.
-        self.dir = 'E:/cgtw_download'
 
     def update_list_widget(self):
         """Update list widget.  """
@@ -156,7 +173,9 @@ class Dialog(QtWidgets.QDialog):
 
     @dir.setter
     def dir(self, value):
-        self.lineEditDir.setText(os.path.normpath(value))
+        path = os.path.normpath(value)
+        self.lineEditDir.setText(path)
+        CONFIG['OUTPUT_DIR'] = path
 
     def autoset(self):
         """Auto set dir.  """
@@ -173,7 +192,7 @@ class Dialog(QtWidgets.QDialog):
     def ask_dir(self):
         """Show a dialog ask user.  """
 
-        file_dialog = QtWidgets.QFileDialog()
+        file_dialog = QFileDialog()
         _dir = file_dialog.getExistingDirectory(
             dir=os.path.dirname(self.dir)
         )
@@ -182,7 +201,4 @@ class Dialog(QtWidgets.QDialog):
 
 
 if __name__ == '__main__':
-    APP = QtWidgets.QApplication(sys.argv)
-    FRAME = Dialog()
-    FRAME.show()
-    sys.exit(APP.exec_())
+    main_show_dialog(Dialog)
