@@ -69,9 +69,11 @@ class ServerFiles(set):
     def compare_with(self, local_dir):
         """Check if file already dowanloaded to @local_dir.  """
 
+        path = Path(local_dir)
+        is_path_exists = path.exists()
         for i in progress(list(self), '比较文件修改日期'):
             assert isinstance(i, ServerFile)
-            i.is_updated = i in Path(local_dir).iterdir()
+            i.is_updated = is_path_exists and i in path.iterdir()
 
     def new_files(self):
         """Not dowanloaded files.  """
