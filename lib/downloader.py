@@ -18,8 +18,6 @@ from wlf.notify import CancelledError, progress
 from wlf.path import get_unicode as u
 from wlf.path import Path
 
-__version__ = '0.2.0'
-
 SUBMIT_FILE = 1 << 0
 
 
@@ -42,9 +40,16 @@ class ServerFiles(set):
                     files.update(path)
         else:
             # Get from filebox.
-            data = current.task_module.get_filebox_with_filebox_id(target.id)
-            path = Path(data['path'])
-            files = (i for i in path.iterdir() if i.is_file())
+            files = set()
+            checked_path = set()
+            for id_ in progress(current.selected_ids, '获取文件框内容'):
+                current.task_module.init_with_id(id_)
+                data = current.task_module.get_filebox_with_filebox_id(
+                    target.id)
+                path = Path(data['path'])
+                if path not in checked_path:
+                    files.update(i for i in path.iterdir() if i.is_file())
+                checked_path.add(path)
 
         files = (ServerFile(i) if not isinstance(i, ServerFile) else i
                  for i in list(files))
