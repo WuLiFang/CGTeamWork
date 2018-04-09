@@ -9,8 +9,4 @@ build/
 /.venv
 
 # Third party libraries
-/lib/jdcal.py
-/lib/openpyxl/
-/lib/et_xmlfile/
-/lib/bs4/
-/lib/psutil/
+site-packages
