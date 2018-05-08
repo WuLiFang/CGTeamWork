@@ -54,7 +54,7 @@ def transfer(plugin_data, status='Approve',
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    LOGGER.setLevel(logging.DEBUG)
+    # LOGGER.setLevel(logging.DEBUG)
     plugin_data = cgtwq.DesktopClient.get_plugin_data()
     cgtwq.update_setting()
     transfer(plugin_data)
