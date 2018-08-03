@@ -12,7 +12,8 @@ def main():
     cgtwq.update_setting()
     plugin_data = cgtwq.client.DesktopClient.get_plugin_data()
     database = cgtwq.Database(plugin_data.database)
-    module = database[plugin_data.module]
+    module = database.module(
+        plugin_data.module, module_type=plugin_data.module_type)
     select = module.select(*plugin_data.id_list)
     __main__ = sys.modules['__main__']
 
