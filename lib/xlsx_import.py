@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -217,8 +217,9 @@ def _apply_on_selection(select, data):
 
 def _convert_from_alias(value, alias_dict):
     assert isinstance(value, six.text_type)
+    _value = value.lower()
     try:
-        return next(i for i in alias_dict if i == value or value.capitalize() in alias_dict[i])
+        return next(i for i in alias_dict if i == _value or _value in alias_dict[i])
     except StopIteration:
         return value
 
