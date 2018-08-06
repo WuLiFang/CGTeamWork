@@ -66,7 +66,7 @@ def main():
         errored_shots = assign_same_to_downstream(select)
         pause(0 if errored_shots else 5)
     except KeyError:
-        print('当前仅支持流程: {}'.format(DOWNSTREAM_DICT.keys()))
+        print('当前仅支持流程: {}'.format(','.join(DOWNSTREAM_DICT.keys())))
         pause(0)
     except:
         import traceback
