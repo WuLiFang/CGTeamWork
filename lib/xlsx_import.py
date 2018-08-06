@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -28,8 +28,8 @@ HEAD_ALIAS = {
     'note': ['备注', '说明']
 }
 METHOD_ALIAS = {
-    'retake': ['Retake', '返修'],
-    'approve': ['Approve', '通过'],
+    'retake': ['返修'],
+    'approve': ['通过'],
 }
 FIELD_ALIAS = {
     'leader_status': ['组长', '组长状态'],
@@ -170,15 +170,22 @@ def import_data(data, database, module, module_type):
 
 
 def _apply_on_selection(select, data):
+    def _check_alias(value, alias, name, label):
+        if value not in alias:
+            LOGGER.error('不能识别表格中给出的任务%s: 行=%s, 值=%s, 支持的值有: %s',
+                         label, data.index, value,
+                         ', '.join(i for j in [alias.keys()] + alias.values() for i in j))
+            raise ValueError('Can not recognize {}.'.format(name), value)
+
     assert isinstance(data, RowData)
     assert isinstance(select, cgtwq.Selection)
     method = _convert_from_alias(data.status, METHOD_ALIAS)
-    if method not in METHOD_ALIAS:
-        LOGGER.error('不能识别表格中给出的任务状态: 行=%s, 值=%s', data.index, method)
-        raise ValueError('Can not recognize method.', method)
+    _check_alias(method, METHOD_ALIAS, 'status', '状态')
     field = _convert_from_alias(data.phase, FIELD_ALIAS)
+    _check_alias(field, FIELD_ALIAS, 'phase', '阶段')
     if field not in FIELD_ALIAS:
-        LOGGER.error('不能识别表格中给出的任务阶段: 行=%s, 值=%s', data.index, field)
+        LOGGER.error('不能识别表格中给出的任务阶段: 行=%s, 值=%s, 支持的值有: %s', data.index, field,
+                     ', '.join(i for j in [FIELD_ALIAS.keys()] + FIELD_ALIAS.values() for i in j))
         raise ValueError('Can not recognize field.', field)
 
     entries = select.to_entries()
