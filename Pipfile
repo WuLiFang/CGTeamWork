@@ -9,8 +9,3 @@ pylint = "*"
 rope = "*"
 
 [packages]
-"bs4" = "*"
-openpyxl = "*"
-"beautifulsoup4" = "*"
-pyside = "*"
-psutil = "*"
