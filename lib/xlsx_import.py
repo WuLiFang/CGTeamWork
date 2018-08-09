@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -25,7 +25,7 @@ HEAD_ALIAS = {
     'shot': ['镜头', '镜头号', '镜头名'],
     'phase': ['阶段', '返修阶段'],
     'status': ['状态', '返修状态'],
-    'note': ['备注', '说明']
+    'note': ['备注', '说明', '内容', '描述']
 }
 METHOD_ALIAS = {
     'retake': ['返修'],
