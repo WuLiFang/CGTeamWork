@@ -8,9 +8,8 @@ import site
 import subprocess
 import sys
 
-import filetools
-
-LOCAL_SITE_DIR = filetools.path('site-packages')
+__dirname__ = os.path.dirname(os.path.abspath(__file__))
+LOCAL_SITE_DIR = os.path.join(__dirname__, 'site-packages')
 
 
 def setup():
