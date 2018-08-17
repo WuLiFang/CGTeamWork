@@ -1,11 +1,19 @@
 # -*- coding=UTF-8 -*-
 """Submit selected file.  """
 
-import cgtwb
+import cgtwq
 
-__version__ = '0.1.1'
+
+def main():
+    cgtwq.update_setting()
+    plugin_data = cgtwq.DesktopClient.get_plugin_data()
+
+    module = cgtwq.Database(plugin_data.database).module(
+        plugin_data.module, module_type=plugin_data.module_type)
+    select = module.select(*plugin_data.id_list)
+
+    select.flow.submit(plugin_data.file_path_list)
+
 
 if __name__ == '__main__':
-    CUR = cgtwb.Current()
-    CUR.task_module.init_with_id(CUR.selected_ids)
-    CUR.submit(CUR.files, note=u'自cgtw提交')
+    main()
