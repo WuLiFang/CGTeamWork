@@ -22,7 +22,7 @@ def main():
     """Run incoming arguments with python in configured environment.  """
 
     os.environ['PYTHONPATH'] = LOCAL_SITE_DIR
-    subprocess.call([sys.executable] + sys.argv[1:])
+    sys.exit(subprocess.call([sys.executable] + sys.argv[1:]))
 
 
 if __name__ == '__main__':
