@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.2.1'
+__version__ = '1.3.0'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -196,7 +196,7 @@ def _apply_on_selection(select, data):
     for entry in select.to_entries():
         assert isinstance(entry, cgtwq.Entry)
 
-        message = cgtwq.Message(data.note)
+        message = cgtwq.Message(_convert_note(data.note))
         _message = message.dumps()
         if entry.history.get(
                 (cgtwq.Field('status') == method.capitalize())
@@ -215,10 +215,19 @@ def _apply_on_selection(select, data):
             LOGGER.error('当前用户无权限: 行=%s, 阶段=%s', data.index, data.phase)
 
 
-def _convert_from_alias(value, alias_dict):
-    if not isinstance(value, six.text_type):
+def _convert_note(value):
+    if not value:
         return value
-    _value = value.lower()
+    _value = six.text_type(value)
+    _value = _value.replace('\n', '<br>')
+    return _value
+
+
+def _convert_from_alias(value, alias_dict):
+    if not value:
+        return value
+    _value = six.text_type(value)
+    _value = _value.lower()
     try:
         return next(i for i in alias_dict if i == _value or _value in alias_dict[i])
     except StopIteration:
