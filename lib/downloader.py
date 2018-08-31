@@ -11,13 +11,13 @@ import webbrowser
 from Qt import QtCompat
 from Qt.QtWidgets import QDialog, QFileDialog, QRadioButton
 
-from cgtwb import Current
-from wlf.files import copy, is_same
-from wlf.notify import CancelledError, progress
-from wlf.path import get_unicode as u
-from wlf.path import Path, PurePath
-from wlf.uitools import main_show_dialog
+import cgtwq
 from wlf.config import Config as BaseConfig
+from wlf.fileutil import copy, is_same
+from wlf.path import Path, PurePath
+from wlf.path import get_unicode as u
+from wlf.progress import CancelledError, progress
+from wlf.uitools import main_show_dialog
 
 SUBMIT_FILE = 1 << 0
 
@@ -36,28 +36,26 @@ class ServerFiles(set):
     """Server files set.  """
 
     def __init__(self, target=SUBMIT_FILE):
-        current = Current()
+        select = cgtwq.DesktopClient.current_select()
         if target == SUBMIT_FILE:
-            # Get from submit file path field.
-            sign = current.signs['submit_file_path']
+            # Get from submit file path field.]
+
             files = set()
-            all_data = current.task_module.get([sign])
-            for data in all_data:
+            for i in select['submit_file_path']:
                 try:
-                    path = json.loads(data[sign])['path']
+                    path = json.loads(i)['path']
                 except (KeyError, ValueError, TypeError):
                     continue
-                if path:
-                    files.update(path)
+                if i:
+                    files.update(i)
         else:
             # Get from filebox.
             files = set()
             checked_path = set()
-            for id_ in progress(current.selected_ids, '获取文件框内容'):
-                current.task_module.init_with_id(id_)
-                data = current.task_module.get_filebox_with_filebox_id(
-                    target.id)
-                path = Path(data['path'])
+            for entry in progress(select.to_entries(), '获取文件框内容'):
+                assert isinstance(entry, cgtwq.Entry)
+                filebox = entry.filebox.get(id_=target.id)
+                path = Path(filebox.path)
                 if path not in checked_path:
                     files.update(i for i in path.iterdir() if i.is_file())
                 checked_path.add(path)
@@ -101,7 +99,6 @@ class Dialog(QDialog):
     def __init__(self):
         super(Dialog, self).__init__()
         QtCompat.loadUi(os.path.join(__file__, '../downloader.ui'), self)
-        self.current = Current()
         self.file_sets = {}
         self._files = ServerFiles()
 
@@ -109,8 +106,11 @@ class Dialog(QDialog):
         self.dir = CONFIG['OUTPUT_DIR']
 
         # Add radio buttons.
+        select = cgtwq.DesktopClient.current_select()
         buttons = []
-        for filebox in self.current.get_filebox(self.current.pipeline.pop()):
+        pipeline = select.module.database.get_pipelines(
+            filters=cgtwq.Filter('entity_name', select['pipeline'][0]))[0]
+        for filebox in select.module.database.get_fileboxes(filters=cgtwq.Filter('#pipeline_id', pipeline.id)):
             button = QRadioButton(filebox.title)
             button.setObjectName(filebox.title)
             buttons.append(button)
@@ -202,5 +202,10 @@ class Dialog(QDialog):
             self.dir = _dir
 
 
-if __name__ == '__main__':
+def main():
+    cgtwq.update_setting()
     main_show_dialog(Dialog)
+
+
+if __name__ == '__main__':
+    main()
