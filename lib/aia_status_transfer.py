@@ -25,7 +25,7 @@ def transfer(plugin_data, status='Approve',
     """
 
     LOGGER.info('传递状态: %s: %s -> %s', status, from_, target)
-    assert isinstance(plugin_data, cgtwq.client.PluginData), type(plugin_data)
+    assert isinstance(plugin_data, cgtwq.model.PluginData), type(plugin_data)
     database = cgtwq.Database(plugin_data.database)
     module = database[plugin_data.module]
     assert isinstance(module, cgtwq.Module)
@@ -55,6 +55,6 @@ def transfer(plugin_data, status='Approve',
 def main():
     logging.basicConfig(level=logging.INFO)
     # LOGGER.setLevel(logging.DEBUG)
-    plugin_data = cgtwq.DesktopClient.get_plugin_data()
-    cgtwq.update_setting()
-    transfer(plugin_data)
+    client = cgtwq.DesktopClient()
+    client.connect()
+    transfer(client.plugin.data())

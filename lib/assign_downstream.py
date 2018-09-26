@@ -54,13 +54,9 @@ def assign_same_to_downstream(select):
 
 def main():
     win_unicode_console.enable()
-    cgtwq.update_setting()
-    plugin_data = cgtwq.DesktopClient.get_plugin_data()
-    select = cgtwq.Database(
-        plugin_data.database
-    ).module(
-        plugin_data.module, module_type=plugin_data.module_type
-    ).select(*plugin_data.id_list)
+    client = cgtwq.DesktopClient()
+    client.connect()
+    select = client.selection()
 
     try:
         errored_shots = assign_same_to_downstream(select)

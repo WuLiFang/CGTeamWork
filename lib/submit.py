@@ -5,13 +5,11 @@ import cgtwq
 
 
 def main():
-    cgtwq.update_setting()
-    plugin_data = cgtwq.DesktopClient.get_plugin_data()
+    client = cgtwq.DesktopClient()
+    client.connect()
 
-    module = cgtwq.Database(plugin_data.database).module(
-        plugin_data.module, module_type=plugin_data.module_type)
-    select = module.select(*plugin_data.id_list)
-
+    plugin_data = client.plugin.data()
+    select = cgtwq.Selection.from_data(**plugin_data._asdict())
     select.flow.submit(plugin_data.file_path_list)
 
 

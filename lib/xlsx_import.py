@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.3.0'
+__version__ = '1.4.0'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -241,8 +241,9 @@ def main():
 
     print('{:-^50}'.format('导入XLSX返修表 v{}'.format(__version__)))
     dummy = application()
-    plugin_data = cgtwq.DesktopClient.get_plugin_data()
-    cgtwq.update_setting()
+    client = cgtwq.DesktopClient()
+    client.connect()
+    plugin_data = client.plugin.data()
 
     filename = ask_filename()
     if not filename:

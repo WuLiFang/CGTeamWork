@@ -36,7 +36,7 @@ class ServerFiles(set):
     """Server files set.  """
 
     def __init__(self, target=SUBMIT_FILE):
-        select = cgtwq.DesktopClient.current_select()
+        select = cgtwq.DesktopClient().selection()
         if target == SUBMIT_FILE:
             # Get from submit file path field.]
 
@@ -106,7 +106,7 @@ class Dialog(QDialog):
         self.dir = CONFIG['OUTPUT_DIR']
 
         # Add radio buttons.
-        select = cgtwq.DesktopClient.current_select()
+        select = cgtwq.DesktopClient().selection()
         buttons = []
         pipeline = select.module.database.get_pipelines(
             filters=cgtwq.Filter('entity_name', select['pipeline'][0]))[0]
@@ -203,7 +203,7 @@ class Dialog(QDialog):
 
 
 def main():
-    cgtwq.update_setting()
+    cgtwq.DesktopClient().connect()
     main_show_dialog(Dialog)
 
 
