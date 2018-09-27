@@ -13,6 +13,7 @@ import win_unicode_console
 
 import cgtwq
 from wlf.codectools import get_encoded as e
+from wlf.console import pause
 
 __version__ = '0.3.0'
 
@@ -145,8 +146,7 @@ win_unicode_console.enable()
 
 def main():
     """Get plugin setting from cgtw.  """
-
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     print('AIA_manage v{}'.format(__version__))
     client = cgtwq.DesktopClient()
@@ -170,4 +170,10 @@ def main():
 
 if __name__ == '__main__':
     win_unicode_console.enable()
-    main()
+    try:
+        main()
+    except:
+        import traceback
+        traceback.print_exc()
+        pause()
+        raise
