@@ -1,138 +1,173 @@
 # -*- coding=UTF-8 -*-
-"""AIA check-in & check-out."""
+"""AIA manage plugin."""
 
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
+import logging
 import os
 import stat
-import json
-import re
-import datetime
+from itertools import chain
 
-import cgtwb
-from wlf.files import get_encoded, copy
-from wlf.notify import error
-from wlf.console import pause
+import win_unicode_console
 
-__version__ = '0.2.0'
+import cgtwq
+from wlf.codectools import get_encoded as e
+
+__version__ = '0.3.0'
 
 
-class CurrentAssets(cgtwb.Current):
-    """Current asset selected from cgtw, mayby multiple item.  """
-    fields = {'file': 'asset_task.submit_file_path',
-              'aia': 'asset_task.define_iic',
-              'pipeline': 'asset_task.pipeline',
-              'name': 'asset.asset_name'}
-    files = []
-    archive_folder = 'history'
-
-    def __init__(self):
-        super(CurrentAssets, self).__init__()
-        self.task_module.init_with_id(self.selected_ids)
-
-        infos = self.task_module.get(self.fields.values())
-        self.files = []
-        for info in infos:
-            file_info = info[self.fields['file']]
-            if file_info:
-                files = json.loads(file_info).get('path')
-
-                if not files:
-                    error(u'{}找不到提交文件'.format(info[self.fields['name']]))
-                    raise ValueError('Submit file not found')
-
-                # Prepare sign directory
-                sign = u'{}_ok'.format(info[self.fields['pipeline']])
-                try:
-                    sign_dir = [dir_info for dir_info in self.task_module.get_dir(
-                        [sign]) if dir_info['id'] == info['id']][0][sign]
-                except (IndexError, TypeError):
-                    sign_dir = None
-
-                # Try same directory
-                for i in files:
-                    try:
-                        self.files.append(get_ok_file(i))
-                    except NoMatchError:
-                        if sign_dir:
-                            filename = os.path.join(
-                                sign_dir, os.path.basename(i))
-                            if os.path.exists(get_encoded(filename)):
-                                self.files.append(filename)
-                                continue
-                        error(u'找不到 {} 对应的ok文件'.format(i), 'NoMatch')
-                        continue
-            else:
-                error(u'{}找不到提交文件'.format(info[self.fields['name']]))
-                raise ValueError('Submit file not found')
-
-        self._time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-
-    def checkin(self):
-        """Set file read-only and set aia status to approve the archive it.  """
-        for i in self.files:
-            self.archive(i)
-            os.chmod(i, stat.S_IREAD)
-            print('readonly', i)
-
-        successed = self.task_module.set({self.fields['aia']: 'Approve'})
-        print('checkin successed', successed)
-        if not successed:
-            error(u'设置aia属性不成功')
-
-    def archive(self, filename):
-        """Archive file.  """
-        archive_folder = os.path.join(
-            os.path.dirname(filename), self.archive_folder)
-        if not os.path.exists(get_encoded(archive_folder)):
-            os.mkdir(get_encoded(archive_folder))
-        dest = u'{}\\'.format(os.path.join(archive_folder, self._time))
-        copy(filename, dest)
-
-    def checkout(self):
-        """Set current file writable and set aia status to waiting."""
-        for i in self.files:
-            os.chmod(get_encoded(i), stat.S_IWRITE)
-            print('writable', i)
-
-        successed = self.task_module.set({self.fields['aia']: 'Wait'})
-        print('checkout successed', successed)
-        if not successed:
-            error(u'设置aia属性不成功')
+LOGGER = logging.getLogger(__name__)
 
 
-def get_ok_file(filename):
-    """Get ok version filename.  """
-    dirname = os.path.normpath(os.path.dirname(filename))
-    if not re.match(r'(?i).*\\work$', dirname):
-        raise NoMatchError
-    ret = os.path.join(re.sub(r'(?i)\\work$', r'\ok',
-                              dirname), os.path.basename(filename))
-    ret = get_encoded(ret)
-    if not os.path.exists(ret):
-        raise NoMatchError
+def get_filebox_meta(select):
+    """Get filebox for final files.  """
+
+    assert isinstance(select, cgtwq.Selection), type(select)
+    pipelines = select.pipeline.all()
+    assert pipelines
+    fileboxes = select.module.database.filebox.filter(
+        cgtwq.Field('title').has('最终'),
+        cgtwq.Field('#pipeline_id').in_([i.id for i in pipelines])
+    )
+    if not fileboxes:
+        raise RuntimeError('No matched fileboxes')
+    elif len(fileboxes) != 1:
+        raise RuntimeError('Multiple matched filebox', fileboxes)
+    ret = fileboxes[0]
+    assert isinstance(ret, cgtwq.model.FileBoxMeta)
     return ret
 
 
-class NoMatchError(Exception):
-    """Indicate no match file. """
+def set_readonly(select):
+    """Set final files readonly. """
 
-    def __str__(self):
-        return 'No matched file founded.'
+    for i in get_files(select):
+        os.chmod(e(i), stat.S_IREAD)
+        LOGGER.info('设为只读: %s', i)
+
+
+def set_writable(select):
+    """Set final files writable. """
+
+    for i in get_files(select):
+        os.chmod(e(i), stat.S_IWRITE)
+        LOGGER.info('设为读写: %s', i)
+
+
+def get_files(select):
+    """Get final files from selection.
+
+    Args:
+        select (cgtwq.Selection): Selection.
+
+    Returns:
+        Generator[str]: Files
+    """
+
+    assert isinstance(select, cgtwq.Selection), type(select)
+    filebox_meta = get_filebox_meta(select)
+    files = chain()
+    for i in select.to_entries():
+        assert isinstance(i, cgtwq.Entry)
+        filebox = i.filebox.get(id_=filebox_meta.id)
+        files = chain(files, walk(filebox.path))
+    return files
+
+
+def walk(path):
+    """(Generator)Walk through path. Ignore `history` forlder.
+
+    Args:
+        path (str): Path.
+    """
+
+    path = e(path)
+    for dirpath, dirnames, filenames in os.walk(path):
+        try:
+            dirnames.remove('history')
+        except ValueError:
+            pass
+        for i in filenames:
+            yield os.path.join(dirpath, i)
+
+
+def transfer(select,
+             status='Approve',
+             from_=('define_jba', 'client_status'),
+             target=('status',)):
+    """Transfer status from multiple field to multiple filed.
+
+    Args:
+        plugin_data (cgtwq.client.PluginData): Data for plugin.
+        status (str, optional): Defaults to 'Approve'. Status value to transfer.
+        from_ (tuple, optional): Defaults to ('define_jba', 'client_status').
+            Tuple for Server defined status field.
+        target (tuple, optional): Defaults to ('status',).
+            Tuple for Server defined status field.
+    """
+
+    assert isinstance(select, cgtwq.Selection), type(select)
+    LOGGER.info('传递状态: %s: %s -> %s', status, from_, target)
+    data = select.get_fields('id', *(from_+target))
+
+    transfer_id_list = []
+    for i in list(data):
+        assert isinstance(i, list)
+        id_ = i.pop(0)
+        from_data = i[:len(from_)]
+        to_data = i[-len(target):]
+        LOGGER.debug('%s: %s -> %s', id_, from_data, to_data)
+        if (all(i == status for i in from_data)
+                and any(i != status for i in to_data)):
+            transfer_id_list.append(id_)
+
+    if transfer_id_list:
+        select.module.select(*transfer_id_list).set_fields(**
+                                                           {i: status for i in target})
+
+        LOGGER.info('为%s个条目传递了状态', len(transfer_id_list))
+    else:
+        LOGGER.info('检查了%s个条目, 不需传递状态', len(select))
+
+
+def block(select, field):
+    """Block drag in when task already approved.  """
+
+    assert isinstance(select, cgtwq.Selection), type(select)
+    client = cgtwq.DesktopClient()
+    if any(i == 'Approve' for i in select[field]):
+        client.plugin.send_result(False)
+
+
+win_unicode_console.enable()
 
 
 def main():
     """Get plugin setting from cgtw.  """
 
+    logging.basicConfig(level=logging.INFO)
+
     print('AIA_manage v{}'.format(__version__))
-    assets = CurrentAssets()
-    operation = assets.sys_module.get_argv_key('operation')
-    if operation == 'checkin':
-        assets.checkin()
-    elif operation == 'checkout':
-        assets.checkout()
-    else:
-        print(assets.files)
-    pause()
+    client = cgtwq.DesktopClient()
+    client.connect()
+    metadata = client.plugin.metadata()
+    select = client.selection()
+
+    func = {
+        'set_readonly': set_readonly,
+        'set_writable': set_writable,
+        'transfer': transfer,
+        'block': lambda select: block(select, metadata.arguments['field'])
+    }[metadata.arguments['operation']]
+
+    try:
+        func(select)
+    except:
+        client.plugin.send_result(False)
+        raise
 
 
 if __name__ == '__main__':
+    win_unicode_console.enable()
     main()
