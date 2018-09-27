@@ -175,5 +175,5 @@ if __name__ == '__main__':
     except:
         import traceback
         traceback.print_exc()
-        pause()
+        pause(0)
         raise
