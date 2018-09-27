@@ -146,7 +146,7 @@ win_unicode_console.enable()
 
 def main():
     """Get plugin setting from cgtw.  """
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     print('AIA_manage v{}'.format(__version__))
     client = cgtwq.DesktopClient()
