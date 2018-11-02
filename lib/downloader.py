@@ -108,8 +108,8 @@ class Dialog(QDialog):
         # Add radio buttons.
         select = cgtwq.DesktopClient().selection()
         buttons = []
-        pipeline = select.module.database.get_pipelines(
-            filters=cgtwq.Filter('entity_name', select['pipeline'][0]))[0]
+        pipeline = select.module.database.pipeline.filter(
+            cgtwq.Filter('entity_name', select['pipeline'][0]))[0]
         for filebox in select.module.database.get_fileboxes(filters=cgtwq.Filter('#pipeline_id', pipeline.id)):
             button = QRadioButton(filebox.title)
             button.setObjectName(filebox.title)
