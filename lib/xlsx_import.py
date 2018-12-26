@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.4.4'
+__version__ = '1.5.0'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -208,6 +208,10 @@ def _apply_on_selection(select, data):
                     & (cgtwq.Field('text') == _message)):
                 LOGGER.info('此条已导入, 跳过: 行=%s', data.index)
                 continue
+        else:
+            if entry['status'] == method.capitalize():
+                LOGGER.info('此条已导入, 跳过: 行=%s', data.index)
+                continue
 
         try:
             if method == 'retake':
@@ -215,7 +219,7 @@ def _apply_on_selection(select, data):
             elif method == 'approve':
                 entry.flow.approve(field, message=message)
             LOGGER.info('成功导入: 行=%s, 镜头=%s, 流程=%s, 阶段=%s, 状态=%s, 备注=%s',
-                        data.index, data.shot, data.pipeline, data.phase, data.status, data.note)
+                        data.index, data.shot, data.pipeline, data.phase, data.status, message)
         except cgtwq.PermissionError:
             LOGGER.error('当前用户无权限: 行=%s, 阶段=%s', data.index, data.phase)
 
