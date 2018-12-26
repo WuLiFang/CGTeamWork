@@ -199,13 +199,14 @@ def _apply_on_selection(select, data):
     for entry in select.to_entries():
         assert isinstance(entry, cgtwq.Entry)
 
-        message = cgtwq.Message(_convert_note(data.note))
-        _message = message.dumps()
-        if entry.history.get(
-                (cgtwq.Field('status') == method.capitalize())
-                & (cgtwq.Field('text') == _message)):
-            LOGGER.info('此条已导入, 跳过: 行=%s', data.index)
-            continue
+        if data.note:
+            message = cgtwq.Message(_convert_note(data.note))
+            _message = message.dumps()
+            if entry.history.get(
+                    (cgtwq.Field('status') == method.capitalize())
+                    & (cgtwq.Field('text') == _message)):
+                LOGGER.info('此条已导入, 跳过: 行=%s', data.index)
+                continue
 
         try:
             if method == 'retake':
