@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -199,8 +199,8 @@ def _apply_on_selection(select, data):
     for entry in select.to_entries():
         assert isinstance(entry, cgtwq.Entry)
 
-        if data.note:
-            message = cgtwq.Message(_convert_note(data.note))
+        message = cgtwq.Message(_convert_note(data.note))
+        if message:
             _message = message.dumps()
             if entry.history.get(
                     (cgtwq.Field('status') == method.capitalize())
@@ -221,7 +221,7 @@ def _apply_on_selection(select, data):
 
 def _convert_note(value):
     if not value:
-        return value
+        return ''
     _value = six.text_type(value)
     _value = _value.replace('\n', '<br>')
     return _value
