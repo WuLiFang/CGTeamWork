@@ -152,6 +152,7 @@ def import_data(data, database, module, module_type):
     """Import data to cgtw database.  """
 
     module = cgtwq.Database(database).module(module, module_type)
+    errors = []
     for i in data:
         assert isinstance(i, RowData)
         try:
@@ -161,12 +162,14 @@ def import_data(data, database, module, module_type):
         except ValueError:
             LOGGER.error('找不到对应条目: 行=%s, 数据库=%s, 镜头号=%s, 流程=%s',
                          i.index, database, i.shot, i.pipeline, )
-            raise NoEntry(i)
+            errors.append(NoEntry(i))
 
         try:
             _apply_on_selection(select, i)
         except ValueError:
             continue
+    if errors:
+        raise ImportError(errors)
 
 
 def _apply_on_selection(select, data):
