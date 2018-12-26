@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
@@ -163,6 +163,7 @@ def import_data(data, database, module, module_type):
             LOGGER.error('找不到对应条目: 行=%s, 数据库=%s, 镜头号=%s, 流程=%s',
                          i.index, database, i.shot, i.pipeline, )
             errors.append(NoEntry(i))
+            continue
 
         try:
             _apply_on_selection(select, i)
