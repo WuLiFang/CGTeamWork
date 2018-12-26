@@ -17,7 +17,7 @@ from wlf.console import pause
 from wlf.progress import CancelledError, progress
 from wlf.uitools import application
 
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 LOGGER = logging.getLogger(__name__)
 
 HEAD_ALIAS = {
