@@ -59,7 +59,7 @@ def update_entry(entry):
                         & (cgtwq.Field('status') == 'Retake')))
         result[i.retake_count_field_sign] = value
     entry.set_fields(**result)
-    LOGGER.info('Updated entry: %s: %s', i, result)
+    LOGGER.info('Updated entry: %s: %s', entry, result)
 
 
 def main():
