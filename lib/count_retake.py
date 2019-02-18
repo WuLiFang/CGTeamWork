@@ -7,7 +7,11 @@ from __future__ import (absolute_import, division, print_function,
 import logging
 from collections import namedtuple
 
+import win_unicode_console
+
 import cgtwq
+
+__version__ = '0.1.0'
 
 FieldData = namedtuple(
     'FieldData', ('status_field_sign', 'retake_count_field_sign', 'label', 'step'))
@@ -55,9 +59,15 @@ def update_entry(entry):
                         & (cgtwq.Field('status') == 'Retake')))
         result[i.retake_count_field_sign] = value
     entry.set_fields(**result)
+    LOGGER.info('Updated entry: %s: %s', i, result)
 
 
 def main():
+    win_unicode_console.enable()
+    logging.basicConfig(
+        level='INFO', format='%(levelname)-7s:%(name)s: %(message)s')
+
+    print('更新返修次数 v{}'.format(__version__))
     client = cgtwq.DesktopClient()
     client.connect()
     select = client.selection()
