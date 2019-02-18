@@ -1,5 +1,5 @@
-https://github.com/WuLiFang/wlf/archive/0.5.0.tar.gz#egg=wlf
-https://github.com/WuLiFang/uploader/archive/3.3.0.tar.gz#egg=cgtwq-uploader
-https://github.com/WuLiFang/cgtwq/archive/3.0.0-alpha.4.tar.gz#egg=cgtwq
+wlf @ git+https://github.com/WuLiFang/wlf@0.5.3
+cgtwq-uploader @ git+https://github.com/WuLiFang/uploader@3.3.0
+cgtwq @ git+https://github.com/WuLiFang/cgtwq@3.0.0-alpha.8
 PySide ~= 1.2
 win_unicode_console ~= 0.5
