@@ -105,24 +105,24 @@ class Dialog(QDialog):
         # Recover from config.
         self.dir = CONFIG['OUTPUT_DIR']
 
-        # Add radio buttons.
+        # Setup radio buttons.
+        self.radioButtonSubmit.toggled.connect(
+            lambda status: self.on_radio_toggled(SUBMIT_FILE, status))
         select = cgtwq.DesktopClient().selection()
-        buttons = []
         pipeline = select.module.database.pipeline.filter(
             cgtwq.Filter('entity_name', select['pipeline'][0]))[0]
-        for filebox in select.module.database.get_fileboxes(filters=cgtwq.Filter('#pipeline_id', pipeline.id)):
+        for filebox in (select.module
+                        .database
+                        .filebox
+                        .filter(cgtwq.Filter('#pipeline_id', pipeline.id))):
             button = QRadioButton(filebox.title)
             button.setObjectName(filebox.title)
-            buttons.append(button)
-            self.groupBox.layout().addWidget(button)
-            # Set signal for button.
             button.toggled.connect(
                 lambda status, target=filebox: self.on_radio_toggled(target, status))
+            self.groupBox.layout().addWidget(button)
 
         # Connect signals.
         self.toolButton.clicked.connect(self.ask_dir)
-        self.radioButtonSubmit.toggled.connect(
-            lambda status: self.on_radio_toggled(SUBMIT_FILE, status))
         self.lineEditDir.editingFinished.connect(self.autoset)
         self.checkBoxSkipSame.toggled.connect(self.update_list_widget)
 
@@ -145,11 +145,13 @@ class Dialog(QDialog):
         self.labelCount.setText('{} 个文件'.format(len(files)))
 
     def on_radio_toggled(self, target, status):
-        if status:
-            if target not in self.file_sets:
-                self.file_sets[target] = ServerFiles(target)
-            self._files = self.file_sets[target]
-            self.update_list_widget()
+        if not status:
+            return
+
+        if target not in self.file_sets:
+            self.file_sets[target] = ServerFiles(target)
+        self._files = self.file_sets[target]
+        self.update_list_widget()
 
     def download(self):
         """Download Files.   """
