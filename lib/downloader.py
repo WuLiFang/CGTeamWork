@@ -65,7 +65,7 @@ class ServerFiles(set):
         super(ServerFiles, self).__init__(files)
 
     def compare_with(self, local_dir):
-        """Check if file already dowanloaded to @local_dir.  """
+        """Check if file already downloaded to @local_dir.  """
 
         path = Path(local_dir)
         is_path_exists = path.exists()
@@ -74,7 +74,7 @@ class ServerFiles(set):
             i.is_updated = is_path_exists and i in path.iterdir()
 
     def new_files(self):
-        """Not dowanloaded files.  """
+        """Not downloaded files.  """
 
         return sorted(i for i in self if not i.is_updated)
 
