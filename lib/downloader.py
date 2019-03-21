@@ -4,6 +4,8 @@
 """
 from __future__ import absolute_import, print_function, unicode_literals
 
+import errno
+import hashlib
 import json
 import os
 import webbrowser
@@ -32,7 +34,7 @@ class Config(BaseConfig):
 CONFIG = Config()
 
 
-class ServerFiles(set):
+class RemoteFiles(set):
     """Server files set.  """
 
     def __init__(self, target=SUBMIT_FILE):
@@ -60,18 +62,19 @@ class ServerFiles(set):
                     files.update(i for i in path.iterdir() if i.is_file())
                 checked_path.add(path)
 
-        files = (ServerFile(i) if not isinstance(i, ServerFile) else i
+        files = (RemoteFile(i) if not isinstance(i, RemoteFile) else i
                  for i in list(files))
-        super(ServerFiles, self).__init__(files)
+        super(RemoteFiles, self).__init__(files)
 
     def compare_with(self, local_dir):
         """Check if file already downloaded to @local_dir.  """
 
-        path = Path(local_dir)
-        is_path_exists = path.exists()
+        _local_dir = Path(local_dir)
+        is_dir_exists = _local_dir.exists()
+        existed = [get_weak_filehash(i) for i in _local_dir.iterdir()]
         for i in progress(list(self), '比较文件修改日期'):
-            assert isinstance(i, ServerFile)
-            i.is_updated = is_path_exists and i in path.iterdir()
+            assert isinstance(i, RemoteFile)
+            i.is_updated = is_dir_exists and get_weak_filehash(i) in existed
 
     def new_files(self):
         """Not downloaded files.  """
@@ -79,18 +82,52 @@ class ServerFiles(set):
         return sorted(i for i in self if not i.is_updated)
 
 
-class ServerFile(unicode):
+class RemoteFile(unicode):
     """File on server.  """
 
-    def __init__(self, path):
-        super(ServerFile, self).__init__(u(path))
-        self.path = path
+    history_dirname = '_history'
+
+    def __init__(self, *_args):
         self.is_updated = False
 
-    def __eq__(self, other):
-        if PurePath(other).name != PurePath(self.path).name:
-            return False
-        return is_same(self.path, other)
+    def download(self, dest, is_skip_same=True):
+        """Download file to dest.  """
+
+        _dest = Path(dest)
+        if not _dest.exists():
+            copy(self, _dest)
+
+            return
+
+        dest_hash = get_weak_filehash(_dest)
+
+        if get_weak_filehash(self) != dest_hash:
+            history_folder = Path(_dest.parent / self.history_dirname)
+            history_folder.mkdir(parents=True, exist_ok=True)
+            backup_file = (history_folder /
+                           _dest.with_suffix(
+                               '.{}{}'.format(dest_hash[:8],
+                                              _dest.suffix)).name)
+            try:
+                _dest.rename(backup_file)
+            except OSError as ex:
+                if ex.errno != errno.EEXIST:
+                    raise ex
+        elif is_skip_same:
+            return
+
+        copy(self, _dest)
+
+
+def get_weak_filehash(path):
+    """Fast weak hash.  """
+
+    h = hashlib.sha1()
+    _path = Path(path)
+    stat = _path.stat()
+    h.update('{0:s}\n\n{1:.4f}\n\n{2:d}'.format(
+        _path.name, stat.st_mtime, stat.st_size))
+    return h.hexdigest()
 
 
 class Dialog(QDialog):
@@ -100,7 +137,7 @@ class Dialog(QDialog):
         super(Dialog, self).__init__()
         QtCompat.loadUi(os.path.join(__file__, '../downloader.ui'), self)
         self.file_sets = {}
-        self._files = ServerFiles()
+        self._files = RemoteFiles()
 
         # Recover from config.
         self.dir = CONFIG['OUTPUT_DIR']
@@ -149,20 +186,17 @@ class Dialog(QDialog):
             return
 
         if target not in self.file_sets:
-            self.file_sets[target] = ServerFiles(target)
+            self.file_sets[target] = RemoteFiles(target)
         self._files = self.file_sets[target]
         self.update_list_widget()
 
     def download(self):
         """Download Files.   """
 
-        files = self.files.new_files() if self.checkBoxSkipSame.isChecked() else self.files
-        try:
-            for i in progress(files, '下载文件'):
-                copy(i, self.dir)
-            return True
-        except CancelledError:
-            return False
+        is_skip_same = self.checkBoxSkipSame.isChecked()
+        for i in progress(self.files, '下载文件'):
+            i.download(Path(self.dir) / Path(i).name,
+                       is_skip_same=is_skip_same)
 
     @property
     def files(self):
@@ -189,9 +223,12 @@ class Dialog(QDialog):
     def accept(self):
         """Override QDialog.accept().  """
 
-        if self.download():
+        try:
+            self.download()
             webbrowser.open(self.dir)
             self.close()
+        except CancelledError:
+            pass
 
     def ask_dir(self):
         """Show a dialog ask user.  """

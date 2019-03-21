@@ -1,6 +1,7 @@
 build/
 *.pyc
 *.spec
+.pytest_cache
 
 # vscode
 .vscode/
