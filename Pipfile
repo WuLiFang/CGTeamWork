@@ -3,9 +3,13 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[requires]
+python_full_version = "2.7.12"
+
 [dev-packages]
-pylint = "*"
+pylint = "~=1.9.4"
 "autopep8" = "*"
 rope = "*"
+pytest = "*"
 
 [packages]
