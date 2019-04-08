@@ -2,6 +2,7 @@ build/
 *.pyc
 *.spec
 .pytest_cache
+.ipynb_checkpoints
 
 # vscode
 .vscode/
