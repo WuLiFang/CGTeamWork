@@ -5,8 +5,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
+import glob
 import hashlib
 import json
+import logging
 import os
 import webbrowser
 
@@ -15,9 +17,8 @@ from Qt.QtWidgets import QDialog, QFileDialog, QRadioButton
 
 import cgtwq
 from wlf.config import Config as BaseConfig
-from wlf.fileutil import copy, is_same
-from wlf.path import Path, PurePath
-from wlf.path import get_unicode as u
+from wlf.fileutil import copy
+from wlf.path import Path
 from wlf.progress import CancelledError, progress
 from wlf.uitools import main_show_dialog
 
@@ -32,6 +33,7 @@ class Config(BaseConfig):
 
 
 CONFIG = Config()
+LOGGER = logging.getLogger(__name__)
 
 
 class RemoteFiles(set):
@@ -39,28 +41,31 @@ class RemoteFiles(set):
 
     def __init__(self, target=SUBMIT_FILE):
         select = cgtwq.DesktopClient().selection()
+        files = set()
         if target == SUBMIT_FILE:
             # Get from submit file path field.]
 
-            files = set()
             for i in select['submit_file_path']:
                 try:
-                    path = json.loads(i)['path']
+                    pathlist = json.loads(i)['file_path']
+                    if isinstance(pathlist, list):
+                        files.update(pathlist)
                 except (KeyError, ValueError, TypeError):
+                    LOGGER.warning('Can not parse: %s', i)
                     continue
-                if i:
-                    files.update(i)
         else:
             # Get from filebox.
-            files = set()
-            checked_path = set()
+            checked = set()
             for entry in progress(select.to_entries(), '获取文件框内容'):
                 assert isinstance(entry, cgtwq.Entry)
-                filebox = entry.filebox.get(id_=target.id)
+                filebox = entry.filebox.from_id(target.id)
                 path = Path(filebox.path)
-                if path not in checked_path:
-                    files.update(i for i in path.iterdir() if i.is_file())
-                checked_path.add(path)
+                for rule in filebox.rule:
+                    key = (path, rule)
+                    if key in checked:
+                        continue
+                    files.update(i for i in path.glob(rule) if i.is_file())
+                    checked.add(key)
 
         files = (RemoteFile(i) if not isinstance(i, RemoteFile) else i
                  for i in list(files))
