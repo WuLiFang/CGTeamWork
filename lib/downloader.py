@@ -1,7 +1,5 @@
 #! py -2.7
 # -*- coding=UTF-8 -*-
-"""Download submit files for selected items.
-"""
 from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
@@ -12,8 +10,10 @@ import logging
 import os
 import sys
 import webbrowser
+from multiprocessing.dummy import Pool
 
 from Qt import QtCompat
+from Qt.QtCore import QCoreApplication
 from Qt.QtWidgets import QApplication, QDialog, QFileDialog, QRadioButton
 
 import cgtwq
@@ -24,6 +24,10 @@ from wlf.path import Path
 from wlf.progress import CancelledError, progress
 from wlf.progress.handlers.qt import QtProgressBar
 from wlf.uitools import main_show_dialog
+
+"""Download submit files for selected items.
+"""
+
 
 SUBMIT_FILE = 1 << 0
 
@@ -202,9 +206,15 @@ class Dialog(QDialog):
         """Download Files.   """
 
         is_skip_same = self.checkBoxSkipSame.isChecked()
+
+        pool = Pool()
         for i in progress(self.files, '下载文件', parent=self):
-            i.download(Path(self.dir) / Path(i).name,
-                       is_skip_same=is_skip_same)
+            result = pool.apply_async(
+                i.download, (Path(self.dir) / Path(i).name,), dict(is_skip_same=is_skip_same))
+            while not result.ready():
+                QCoreApplication.processEvents()
+            if not result.successful():
+                raise RuntimeError('Download failed', i)
 
     @property
     def files(self):
