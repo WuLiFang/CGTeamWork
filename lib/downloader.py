@@ -10,16 +10,19 @@ import hashlib
 import json
 import logging
 import os
+import sys
 import webbrowser
 
 from Qt import QtCompat
-from Qt.QtWidgets import QDialog, QFileDialog, QRadioButton
+from Qt.QtWidgets import QApplication, QDialog, QFileDialog, QRadioButton
 
 import cgtwq
+from wlf import mp_logging
 from wlf.config import Config as BaseConfig
 from wlf.fileutil import copy
 from wlf.path import Path
 from wlf.progress import CancelledError, progress
+from wlf.progress.handlers.qt import QtProgressBar
 from wlf.uitools import main_show_dialog
 
 SUBMIT_FILE = 1 << 0
@@ -248,7 +251,12 @@ class Dialog(QDialog):
 
 def main():
     cgtwq.DesktopClient().connect()
-    main_show_dialog(Dialog)
+    # TODO: refactor this when new version of `wlf` released
+    mp_logging.basic_config()
+    QApplication(sys.argv)
+    frame = Dialog()
+    QtProgressBar.default_parent = frame
+    sys.exit(frame.exec_())
 
 
 if __name__ == '__main__':
