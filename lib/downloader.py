@@ -168,6 +168,8 @@ class Dialog(QDialog):
         self.lineEditDir.editingFinished.connect(self.autoset)
         self.checkBoxSkipSame.toggled.connect(self.update_list_widget)
 
+        self.update_list_widget()
+
     def update_list_widget(self):
         """Update list widget.  """
 
