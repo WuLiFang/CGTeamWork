@@ -150,6 +150,7 @@ class Dialog(QDialog):
         QtCompat.loadUi(os.path.join(__file__, '../downloader.ui'), self)
         self.file_sets = {}
         self._files = RemoteFiles()
+        self.is_downloading = False
 
         # Recover from config.
         self.dir = CONFIG['OUTPUT_DIR']
@@ -205,16 +206,24 @@ class Dialog(QDialog):
     def download(self):
         """Download Files.   """
 
-        is_skip_same = self.checkBoxSkipSame.isChecked()
+        if self.is_downloading:
+            return
+        self.is_downloading = True
+        self.buttonBox.setEnabled(False)
 
-        pool = Pool()
-        for i in progress(self.files, '下载文件', parent=self):
-            result = pool.apply_async(
-                i.download, (Path(self.dir) / Path(i).name,), dict(is_skip_same=is_skip_same))
-            while not result.ready():
-                QCoreApplication.processEvents()
-            if not result.successful():
-                raise RuntimeError('Download failed', i)
+        try:
+            is_skip_same = self.checkBoxSkipSame.isChecked()
+            pool = Pool()
+            for i in progress(self.files, '下载文件', parent=self):
+                result = pool.apply_async(
+                    i.download, (Path(self.dir) / Path(i).name,), dict(is_skip_same=is_skip_same))
+                while not result.ready():
+                    QCoreApplication.processEvents()
+                if not result.successful():
+                    raise RuntimeError('Download failed', i)
+        finally:
+            self.is_downloading = False
+            self.buttonBox.setEnabled(True)
 
     @property
     def files(self):
