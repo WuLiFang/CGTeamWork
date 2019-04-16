@@ -166,14 +166,14 @@ class Dialog(QDialog):
         # Connect signals.
         self.toolButton.clicked.connect(self.ask_dir)
         self.lineEditDir.editingFinished.connect(self.autoset)
-        self.checkBoxSkipSame.toggled.connect(self.update_list_widget)
+        self.checkBoxSkipSame.toggled.connect(self.update_filelist)
 
-        self.update_list_widget()
+        self.update_filelist()
 
-    def update_list_widget(self):
+    def update_filelist(self):
         """Update list widget.  """
 
-        widget = self.listWidget
+        widget = self.plainTextEdit
         widget.clear()
 
         if self.checkBoxSkipSame.isChecked():
@@ -183,9 +183,7 @@ class Dialog(QDialog):
             files = sorted(self.files)
 
         for i in files:
-            if len(i) >= 40:
-                i = '...' + i[-40:]
-            widget.addItem(i)
+            widget.appendPlainText(i)
         self.labelCount.setText('{} 个文件'.format(len(files)))
 
     def on_radio_toggled(self, target, status):
@@ -195,7 +193,7 @@ class Dialog(QDialog):
         if target not in self.file_sets:
             self.file_sets[target] = RemoteFiles(target)
         self._files = self.file_sets[target]
-        self.update_list_widget()
+        self.update_filelist()
 
     def download(self):
         """Download Files.   """

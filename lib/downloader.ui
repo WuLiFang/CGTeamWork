@@ -69,7 +69,14 @@
     </widget>
    </item>
    <item>
-    <widget class="QListWidget" name="listWidget"/>
+    <widget class="QPlainTextEdit" name="plainTextEdit">
+     <property name="lineWrapMode">
+      <enum>QPlainTextEdit::NoWrap</enum>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
