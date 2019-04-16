@@ -199,7 +199,7 @@ class Dialog(QDialog):
         """Download Files.   """
 
         is_skip_same = self.checkBoxSkipSame.isChecked()
-        for i in progress(self.files, '下载文件'):
+        for i in progress(self.files, '下载文件', parent=self):
             i.download(Path(self.dir) / Path(i).name,
                        is_skip_same=is_skip_same)
 
