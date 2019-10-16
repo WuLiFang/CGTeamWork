@@ -1,10 +1,10 @@
 wlf @ https://github.com/WuLiFang/wlf/archive/v0.6.0.tar.gz#egg=wlf-0.6.0
 cgtwq_uploader @ https://github.com/WuLiFang/uploader/archive/v3.4.0.tar.gz#egg=cgtwq_uploader-3.4.0
-cgtwq @ https://github.com/WuLiFang/cgtwq/archive/3.0.0-alpha.8.tar.gz#egg=cgtwq-3.0.0-a8
-PySide ~= 1.2
-win_unicode_console ~= 0.5
-ipython ~= 5.8.0
-ipykernel ~= 4.10.0
-tornado ~= 5.1.1
-jupyter-console ~= 5.2.0
-jupyter ~= 1.0.0
+./vendor/cgtwq-3.0.0b0-py2.py3-none-any.whl
+PySide==1.2.4
+win_unicode_console==0.5
+ipython==5.8.0
+ipykernel==4.10.0
+tornado==5.1.1
+jupyter-console==5.2.0
+jupyter==1.0.0
