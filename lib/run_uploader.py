@@ -13,6 +13,8 @@ def setup_prefix_filter():
 
     cgtwq.helper.wlf.CGTWQHelper.prefix_filters.append(
         lambda x: x.replace('XJCG', 'XJ'))
+    cgtwq.helper.wlf.CGTWQHelper.prefix_filters.append(
+        lambda x: x.replace('QNPV', 'QNYH'))
 
 
 if __name__ == '__main__':
