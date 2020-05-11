@@ -6,186 +6,150 @@ from __future__ import print_function, unicode_literals
 import logging
 import os
 import sys
+import typing  # pylint:disable=unused-import
 import webbrowser
-import unittest
+from datetime import datetime
 
+import openpyxl
 from bs4 import BeautifulSoup
+from Qt.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-from wlf.mp_logging import set_basic_logger
-from wlf.table import RowTable
-from wlf.Qt.QtWidgets import QApplication, QFileDialog
-from wlf.notify import Progress, CancelledError, message_box
-
-from cgtwb import Current
+import cgtwq
+import wlf.mp_logging
 
 LOGGER = logging.getLogger()
-if __name__ == '__main__':
-    set_basic_logger()
 
-__version__ = '0.3.3'
+__version__ = '0.4.0'
 
 
-class CurrentHistory(RowTable):
-    """Retake/Approve history of current module.  """
+def parse_html_comment(value):
+    """Parse history text.  """
 
-    l10n_dict = {
-        '^note$': '备注',
-        '^text$': '文本',
-        '^name$': '名称',
-        r'^image(\d*)': r'图片\1',
-        '^time$': '时间',
-        '^step$': '流程',
-        '^pipeline$': '制作阶段',
-        '^Approve$': '通过',
-        '^Retake$': '返修',
-        '^status$': '状态',
-        '^artist$': '制作者',
+    soup = BeautifulSoup(value, 'html.parser')
+    images = soup.findAll('img')
+    links = []
+    ret = {
+        'images': [],
     }
 
-    def __init__(self):
-        super(CurrentHistory, self).__init__()
-        current = Current()
-        task_module = current.task_module
-        signs = current.signs
+    for i in images:
+        src = i.get('src')
+        if not src:
+            continue
+        ret['images'].append(src)
+    value = soup.get_text(strip=True).replace(
+        'p, li { white-space: pre-wrap; }', '')
+    ret['text'] = value
 
-        if current.get_argv('selected_only'):
-            filters = []
-            for i in current.selected_ids:
-                filters.append(['#task_id', '=', i])
-                filters.append('or')
-            filters.pop(-1)
-        else:
-            filters = [['status', '=', 'Retake'],
-                       'or', ['status', '=', 'Approve']]
+    return ret
 
-        infos = current.history_module.get_with_filter(
-            ['time', 'text', 'status', '#account_id', '#task_id', 'step'],
-            filters)
 
-        if not isinstance(infos, list):
-            raise ValueError(infos)
+L10N_MESSAGES = {
+    'status.Approve': '通过',
+    'status.Retake': '返修',
+}
 
-        infos = [i for i in infos if i['status'] in ('Retake', 'Approve')]
-        if not infos:
-            message_box('所选条目没有返修历史')
-            raise ValueError
 
-        task_module.init_with_id([i['task_id'] for i in infos])
+def tr(key):
+    return L10N_MESSAGES.get(key, key)
 
-        self.task_infos = task_module.get(
-            [signs['name'], signs['artist'], signs['pipeline']])
 
-        task = Progress('获取信息', total=len(infos))
-        task_infos = {}
-        for info in infos:
-            if not info:
-                continue
-            name = self.get_task_info(info['task_id'], signs['name'])
-            pipeline = self.get_task_info(info['task_id'], signs['pipeline'])
-            task_infos.setdefault((name, pipeline), {})
-            task_info = task_infos[(name, pipeline)]
-            step = info['step']
-            task_info.setdefault(step, {})
-            records = task_info[step]
-            record_name = 'record_{:02d}'.format(len(records) + 1)
-            records.setdefault(record_name, {})
-            record = records[record_name]
+def msgbox(message, detail=None):
+    msgbox = QMessageBox()
+    msgbox.setText(message)
+    if detail:
+        msgbox.setDetailedText(detail)
+    return msgbox.exec_()
 
-            task_info['name'] = name
-            task_info['pipeline'] = pipeline
-            task_info['artist'] = self.get_task_info(
-                info['task_id'], signs['artist'])
 
-            record.update(self.parse_html_to_xls(info['text']))
-            record['time'] = info['time']
-            record['status'] = info['status']
+def get_rows(select):
+    # type: (cgtwq.Selection) -> List[Dict]
 
-            task.step(name)
+    histories = select.history.get(cgtwq.Field(
+        'status').in_(['Retake', 'Approve']))
 
-        for key in sorted(task_infos.keys()):
-            self.append(task_infos[key])
+    tasks = set([i.task_id for i in histories])
+    tasks = select.module.select(*tasks)
+    tasks = tasks.get_fields("id", "shot.shot", "pipeline", "artist")
+    tasks = {i[0]: dict(shot=i[1], pipeline=i[2], artist=i[3]) for i in tasks}
+    ret = []
+    history_by_task = {}
+    for i in histories:
+        history_by_task.setdefault(i.task_id, []).append(i)
+    history_by_task = {
+        k: sorted(v, reverse=True, key=lambda x: x.time)
+        for k, v
+        in history_by_task.iteritems()}
+    for i in histories:  # type: cgtwq.model.HistoryInfo
+        task = tasks[i.task_id]
+        row = dict(task)
+        row.update(
+            html=i.text,
+            created_by=i.create_by,
+            time=i.time,
+            status=tr("status."+i.status),
+            step=i.step,
+            order=history_by_task[i.task_id].index(i) + 1
+        )
+        ret.append(row)
 
-        def _get_row(header, index):
-            ret = header
-            try:
-                for _ in range(index):
-                    ret = ret[1]
-                ret = ret[0]
-            except IndexError:
-                ret = None
-            return ret
+    return sorted(ret, key=lambda x: (x['shot'], x['pipeline'], x['order']))
 
-        self.header.sort(key=lambda x: (x[0] != 'name',
-                                        x[0] != 'pipeline',
-                                        x[0] != 'artist',
-                                        x[0] != '组长状态',
-                                        x[0] != '导演状态',
-                                        x[0] != '客户状态',
-                                        x[0] != 'AIA',
-                                        _get_row(x, 1),
-                                        _get_row(x, 2) != 'status',
-                                        _get_row(x, 2) != 'text',
-                                        _get_row(x, 2) == 'time',
-                                        x))
 
-    def get_task_info(self, task_id, name, default=None):
-        """Get task info by @task_id and info @name.  """
+def create_workbook(rows):
+    # type: (typing.List[typing.Dict]) -> openpyxl.Workbook
 
-        ret = [i for i in self.task_infos if i['id'] == task_id]
-        if ret:
-            ret = ret[0][name]
-        else:
-            ret = default
-        return ret
-
-    def parse_html_to_xls(self, value):
-        """Parse history text.  """
-
-        soup = BeautifulSoup(value, 'html.parser')
-        images = soup.findAll('img')
-        links = []
-        ret = {}
-        if images:
-            for i in images:
-                link = u'http://{}/{}'.format(Current().server_ip,
-                                              i.get('src'))
-                links.append(link)
-        value = soup.get_text(strip=True).replace(
-            'p, li { white-space: pre-wrap; }', '')
-
-        if links:
-            for index, link in enumerate(links, 1):
-                xls_func = u'=HYPERLINK("{}","[{}]")'.format(
-                    link, os.path.basename(link))
-
-                ret['image_{}'.format(index)] = xls_func
-            value = value or '[仅有图片]'
-        ret['text'] = value
-
-        return ret
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.append(
+        ['镜头', '流程', '制作者', '状态',
+         '时间', '顺序(最新为1)', "阶段", '操作用户', '备注'])
+    sheet.freeze_panes = 'A2'
+    server_ip = cgtwq.DesktopClient().server_ip
+    for i in rows:
+        row = [
+            i['shot'],
+            i['pipeline'],
+            i['artist'],
+            i['status'],
+            i['time'],
+            i['order'],
+            i['step'],
+            i['created_by'],
+        ]
+        note = parse_html_comment(i['html'])
+        if note['text']:
+            row.append(note['text'])
+        for img in note['images']:
+            link = u'=HYPERLINK("http://{}/{}","[{}]")'.format(
+                server_ip,
+                img,
+                os.path.basename(img))
+            row.append(link)
+        sheet.append(row)
+    return book
 
 
 def main():
     print('{:-^50s}'.format('导出历史 v{}'.format(__version__)))
+    wlf.mp_logging.basic_config()
     dummy_app = QApplication(sys.argv)
     filename, _ = QFileDialog.getSaveFileName(
-        None, '保存位置', 'E:/exported_history.xlsx', '*.xlsx')
-    if filename:
-        try:
-            CurrentHistory().to_xlsx(filename)
-            webbrowser.open(os.path.dirname(filename))
-        except IOError:
-            LOGGER.error('不能写入文件: %s', filename)
-            message_box('不能写入文件: {}, 请检查文件占用'.format(filename))
-        except CancelledError:
-            LOGGER.info('用户取消')
-
-
-class TestCase(unittest.TestCase):
-    def test_1(self):
-        CurrentHistory().to_xlsx('E:/test/test_export.xlsx')
+        None, '保存位置', 'E:/任务历史-{}.xlsx'.format(datetime.now().strftime('%Y%m%d-%H%M')), '*.xlsx')
+    if not filename:
+        return
+    client = cgtwq.DesktopClient()
+    client.connect()
+    select = client.selection()
+    try:
+        rows = get_rows(select)
+        wb = create_workbook(rows)
+        wb.save(filename)
+        webbrowser.open(os.path.dirname(filename))
+    except IOError:
+        LOGGER.error('不能写入文件: %s', filename)
+        msgbox('不能写入文件: {}, 请检查文件占用'.format(filename))
 
 
 if __name__ == '__main__':
     main()
-    # unittest.main()
