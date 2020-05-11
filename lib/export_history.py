@@ -140,7 +140,11 @@ def main():
         return
     client = cgtwq.DesktopClient()
     client.connect()
-    select = client.selection()
+    pipeline = set(client.selection().get_fields(
+        "pipeline").column("pipeline"))
+    select = client.selection().module.filter(
+        cgtwq.Field("pipeline").in_(list(pipeline)),
+    )
     try:
         rows = get_rows(select)
         wb = create_workbook(rows)
