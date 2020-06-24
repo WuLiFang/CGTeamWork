@@ -1,6 +1,6 @@
-wlf @ https://github.com/WuLiFang/wlf/archive/v0.6.0.tar.gz#egg=wlf-0.6.0
-cgtwq_uploader @ https://github.com/WuLiFang/uploader/archive/v3.5.0.tar.gz#egg=cgtwq_uploader-3.5.0
-./vendor/cgtwq-3.0.0b0-py2.py3-none-any.whl
+./vendor/wlf-0.6.0-py2.py3-none-any.whl
+./vendor/cgtwq-3.0.0b1-py2.py3-none-any.whl
+./vendor/cgtwq_uploader-3.6.0-py2.py3-none-any.whl
 PySide==1.2.4
 win_unicode_console==0.5
 ipython==5.8.0

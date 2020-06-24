@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 __dirname__ = os.path.dirname(os.path.abspath(__file__))
-LOCAL_SITE_DIR = os.path.join(__dirname__, "lib", 'site-packages')
+LOCAL_SITE_DIR = os.path.join(__dirname__, ".venv", "lib", 'site-packages')
 
 
 def setup():
