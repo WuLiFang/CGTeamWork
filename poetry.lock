@@ -1,7 +1,6 @@
 [[package]]
 category = "main"
 description = "Disable App Nap on OS X 10.9"
-marker = "python_version < \"3.3\" and sys_platform == \"darwin\" or sys_platform == \"darwin\""
 name = "appnope"
 optional = false
 python-versions = "*"
@@ -24,7 +23,6 @@ tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.i
 [[package]]
 category = "main"
 description = "Backport of functools.lru_cache"
-marker = "python_version < \"3.2\""
 name = "backports.functools-lru-cache"
 optional = false
 python-versions = ">=2.6"
@@ -37,7 +35,6 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pyt
 [[package]]
 category = "main"
 description = "A backport of the get_terminal_size function from Python 3.3's shutil."
-marker = "python_version == \"2.7\""
 name = "backports.shutil-get-terminal-size"
 optional = false
 python-versions = "*"
@@ -46,7 +43,6 @@ version = "1.0.0"
 [[package]]
 category = "main"
 description = "Backport of shutil.which from Python 3.3"
-marker = "os_name == \"nt\" and python_version < \"3.0\""
 name = "backports.shutil-which"
 optional = false
 python-versions = "*"
@@ -122,7 +118,6 @@ version = "3.0.4"
 [[package]]
 category = "main"
 description = "Cross-platform colored terminal text."
-marker = "python_version < \"3.3\" and sys_platform == \"win32\" or sys_platform == \"win32\""
 name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -131,7 +126,6 @@ version = "0.4.3"
 [[package]]
 category = "main"
 description = "Updated configparser from Python 3.7 for Python 2.6+."
-marker = "python_version < \"3\""
 name = "configparser"
 optional = false
 python-versions = ">=2.6"
@@ -144,7 +138,6 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2)", "pytes
 [[package]]
 category = "main"
 description = "Backports and enhancements for the contextlib module"
-marker = "python_version < \"3.4\""
 name = "contextlib2"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
@@ -175,14 +168,11 @@ python-versions = ">=2.7"
 version = "0.3"
 
 [package.dependencies]
-[package.dependencies.configparser]
-python = ">=2.7,<2.8"
-version = ">=3.5"
+configparser = {version = ">=3.5", markers = "python_version == \"2.7\""}
 
 [[package]]
 category = "main"
 description = "Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4"
-marker = "python_version == \"2.7\""
 name = "enum34"
 optional = false
 python-versions = "*"
@@ -208,8 +198,15 @@ tests = ["pytest", "mock", "webtest (2.0.33)", "dj-database-url", "dj-email-url"
 
 [[package]]
 category = "main"
+description = "An implementation of lxml.xmlfile for the standard library"
+name = "et-xmlfile"
+optional = false
+python-versions = "*"
+version = "1.0.1"
+
+[[package]]
+category = "main"
 description = "Backport of the functools module from Python 3.2.3 for use on 2.7 and PyPy."
-marker = "python_version < \"3\""
 name = "functools32"
 optional = false
 python-versions = "*"
@@ -226,7 +223,6 @@ version = "2.9"
 [[package]]
 category = "main"
 description = "Read metadata from Python packages"
-marker = "python_version < \"3.8\""
 name = "importlib-metadata"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
@@ -234,18 +230,9 @@ version = "1.6.1"
 
 [package.dependencies]
 zipp = ">=0.5"
-
-[package.dependencies.configparser]
-python = "<3"
-version = ">=3.5"
-
-[package.dependencies.contextlib2]
-python = "<3"
-version = "*"
-
-[package.dependencies.pathlib2]
-python = "<3"
-version = "*"
+configparser = {version = ">=3.5", markers = "python_version < \"3\""}
+contextlib2 = {version = "*", markers = "python_version < \"3\""}
+pathlib2 = {version = "*", markers = "python_version < \"3\""}
 
 [package.extras]
 docs = ["sphinx", "rst.linker"]
@@ -254,7 +241,6 @@ testing = ["packaging", "pep517", "importlib-resources (>=1.3)"]
 [[package]]
 category = "main"
 description = "IPv4/IPv6 manipulation library"
-marker = "python_version == \"2.7\""
 name = "ipaddress"
 optional = false
 python-versions = "*"
@@ -286,28 +272,18 @@ python-versions = "*"
 version = "5.10.0"
 
 [package.dependencies]
-appnope = "*"
-colorama = "*"
 decorator = "*"
-pexpect = "*"
 pickleshare = "*"
 prompt-toolkit = ">=1.0.4,<2.0.0"
 pygments = "<2.6"
-setuptools = ">=18.5"
 simplegeneric = ">0.8"
 traitlets = ">=4.2"
-
-[package.dependencies."backports.shutil-get-terminal-size"]
-python = ">=2.7,<2.8"
-version = "*"
-
-[package.dependencies.pathlib2]
-python = ">=2.7,<2.8 || >=3.3,<3.4"
-version = "*"
-
-[package.dependencies.win-unicode-console]
-python = "<3.6"
-version = ">=0.5"
+appnope = {version = "*", markers = "sys_platform == \"darwin\""}
+"backports.shutil-get-terminal-size" = {version = "*", markers = "python_version == \"2.7\""}
+colorama = {version = "*", markers = "sys_platform == \"win32\""}
+pathlib2 = {version = "*", markers = "python_version == \"2.7\" or python_version == \"3.3\""}
+pexpect = {version = "*", markers = "sys_platform != \"win32\""}
+win-unicode-console = {version = ">=0.5", markers = "sys_platform == \"win32\" and python_version < \"3.6\""}
 
 [package.extras]
 all = ["nbformat", "ipykernel", "pygments (<2.6)", "testpath", "notebook", "nbconvert", "ipyparallel", "qtconsole", "Sphinx (>=1.3)", "requests", "nose (>=0.10.1)", "ipywidgets"]
@@ -340,14 +316,18 @@ version = "7.5.1"
 ipykernel = ">=4.5.1"
 nbformat = ">=4.2.0"
 traitlets = ">=4.3.1"
-widgetsnbextension = ">=3.5.0,<3.6.0"
-
-[package.dependencies.ipython]
-python = "<3.3"
-version = ">=4.0.0,<6.0.0"
+ipython = {version = ">=4.0.0,<6.0.0", markers = "python_version < \"3.3\""}
 
 [package.extras]
 test = ["pytest (>=3.6.0)", "pytest-cov", "mock"]
+
+[[package]]
+category = "main"
+description = "Julian dates from proleptic Gregorian and Julian calendars."
+name = "jdcal"
+optional = false
+python-versions = "*"
+version = "1.4.1"
 
 [[package]]
 category = "main"
@@ -374,16 +354,9 @@ version = "3.2.0"
 [package.dependencies]
 attrs = ">=17.4.0"
 pyrsistent = ">=0.14.0"
-setuptools = "*"
 six = ">=1.11.0"
-
-[package.dependencies.functools32]
-python = "<3"
-version = "*"
-
-[package.dependencies.importlib-metadata]
-python = "<3.8"
-version = "*"
+functools32 = {version = "*", markers = "python_version < \"3\""}
+importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 
 [package.extras]
 format = ["idna", "jsonpointer (>1.13)", "rfc3987", "strict-rfc3339", "webcolors"]
@@ -416,10 +389,10 @@ version = "5.3.4"
 [package.dependencies]
 jupyter-core = ">=4.6.0"
 python-dateutil = ">=2.1"
-pywin32 = ">=1.0"
 pyzmq = ">=13"
 tornado = ">=4.1"
 traitlets = "*"
+pywin32 = {version = ">=1.0", markers = "sys_platform == \"win32\""}
 
 [package.extras]
 test = ["ipykernel", "ipython", "mock", "pytest"]
@@ -451,8 +424,8 @@ python-versions = "!=3.0,!=3.1,!=3.2,!=3.3,!=3.4,>=2.7"
 version = "4.6.3"
 
 [package.dependencies]
-pywin32 = ">=1.0"
 traitlets = "*"
+pywin32 = {version = ">=1.0", markers = "sys_platform == \"win32\""}
 
 [[package]]
 category = "main"
@@ -552,13 +525,22 @@ pyzmq = ">=17"
 terminado = ">=0.8.1"
 tornado = ">=4.1,<7"
 traitlets = ">=4.2.1"
-
-[package.dependencies.ipaddress]
-python = ">=2.7,<2.8"
-version = "*"
+ipaddress = {version = "*", markers = "python_version == \"2.7\""}
 
 [package.extras]
 test = ["nose", "coverage", "requests", "nose-warnings-filters", "nbval", "nose-exclude", "selenium", "mock", "nose-exclude"]
+
+[[package]]
+category = "main"
+description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
+name = "openpyxl"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "2.6.4"
+
+[package.dependencies]
+et_xmlfile = "*"
+jdcal = "*"
 
 [[package]]
 category = "main"
@@ -583,7 +565,6 @@ version = "1.4.2"
 [[package]]
 category = "main"
 description = "Object-oriented filesystem paths"
-marker = "python_version in \"2.6 2.7 3.2 3.3\" or python_version < \"3\" or python_version < \"3.3\" and python_version in \"2.6 2.7 3.2 3.3\""
 name = "pathlib2"
 optional = false
 python-versions = "*"
@@ -591,15 +572,11 @@ version = "2.3.5"
 
 [package.dependencies]
 six = "*"
-
-[package.dependencies.scandir]
-python = "<3.5"
-version = "*"
+scandir = {version = "*", markers = "python_version < \"3.5\""}
 
 [[package]]
 category = "main"
 description = "Pexpect allows easy control of interactive console applications."
-marker = "python_version < \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\""
 name = "pexpect"
 optional = false
 python-versions = "*"
@@ -617,9 +594,7 @@ python-versions = "*"
 version = "0.7.5"
 
 [package.dependencies]
-[package.dependencies.pathlib2]
-python = ">=2.6.0,<2.8.0 || >=3.2.0,<3.4.0"
-version = "*"
+pathlib2 = {version = "*", markers = "python_version in \"2.6 2.7 3.2 3.3\""}
 
 [[package]]
 category = "main"
@@ -658,7 +633,6 @@ enum = ["enum34"]
 [[package]]
 category = "main"
 description = "Run a subprocess in a pseudo terminal"
-marker = "python_version < \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\" or os_name != \"nt\" or python_version < \"3.3\" and sys_platform != \"win32\" and (python_version < \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\")"
 name = "ptyprocess"
 optional = false
 python-versions = "*"
@@ -719,9 +693,7 @@ python-versions = "*"
 version = "0.13.0"
 
 [package.dependencies]
-[package.dependencies.typing]
-python = "<3.5"
-version = "*"
+typing = {version = "*", markers = "python_version < \"3.5\""}
 
 [package.extras]
 cli = ["click (>=5.0)"]
@@ -729,7 +701,6 @@ cli = ["click (>=5.0)"]
 [[package]]
 category = "main"
 description = "Python for Window Extensions"
-marker = "sys_platform == \"win32\""
 name = "pywin32"
 optional = false
 python-versions = "*"
@@ -738,16 +709,13 @@ version = "228"
 [[package]]
 category = "main"
 description = "Python bindings for the winpty library"
-marker = "os_name == \"nt\""
 name = "pywinpty"
 optional = false
 python-versions = "*"
 version = "0.5.7"
 
 [package.dependencies]
-[package.dependencies."backports.shutil-which"]
-python = "<3.0"
-version = "*"
+"backports.shutil-which" = {version = "*", markers = "python_version < \"3.0\""}
 
 [[package]]
 category = "main"
@@ -816,7 +784,6 @@ socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
 [[package]]
 category = "main"
 description = "scandir, a better directory iterator and faster os.walk()"
-marker = "python_version in \"2.6 2.7 3.2 3.3\" and python_version < \"3\" or python_version < \"3\" or python_version in \"2.6 2.7 3.2 3.3\" or python_version < \"3.3\" and python_version in \"2.6 2.7 3.2 3.3\" or python_version == \"2.7\" or python_version == \"3.3\" or python_version == \"2.7\" or python_version < \"3.3\" and python_version in \"2.6 2.7 3.2 3.3\" and (python_version in \"2.6 2.7 3.2 3.3\" or python_version < \"3\" or python_version < \"3.3\" and python_version in \"2.6 2.7 3.2 3.3\")"
 name = "scandir"
 optional = false
 python-versions = "*"
@@ -855,9 +822,9 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "0.8.3"
 
 [package.dependencies]
-ptyprocess = "*"
-pywinpty = ">=0.5"
 tornado = ">=4"
+ptyprocess = {version = "*", markers = "os_name != \"nt\""}
+pywinpty = {version = ">=0.5", markers = "os_name == \"nt\""}
 
 [[package]]
 category = "main"
@@ -890,10 +857,7 @@ version = "4.3.3"
 decorator = "*"
 ipython-genutils = "*"
 six = "*"
-
-[package.dependencies.enum34]
-python = ">=2.7,<2.8"
-version = "*"
+enum34 = {version = "*", markers = "python_version == \"2.7\""}
 
 [package.extras]
 test = ["pytest", "mock"]
@@ -901,7 +865,6 @@ test = ["pytest", "mock"]
 [[package]]
 category = "main"
 description = "Type Hints for Python"
-marker = "python_version < \"3.5\""
 name = "typing"
 optional = false
 python-versions = "*"
@@ -929,9 +892,7 @@ python-versions = "*"
 version = "0.2.5"
 
 [package.dependencies]
-[package.dependencies."backports.functools-lru-cache"]
-python = "<3.2"
-version = ">=1.2.1"
+"backports.functools-lru-cache" = {version = ">=1.2.1", markers = "python_version < \"3.2\""}
 
 [[package]]
 category = "main"
@@ -954,17 +915,6 @@ six = "*"
 
 [[package]]
 category = "main"
-description = "IPython HTML widgets for Jupyter"
-name = "widgetsnbextension"
-optional = false
-python-versions = "*"
-version = "3.5.1"
-
-[package.dependencies]
-notebook = ">=4.4.1"
-
-[[package]]
-category = "main"
 description = "Enable Unicode input and display when running Python from Windows console."
 name = "win-unicode-console"
 optional = false
@@ -983,10 +933,7 @@ version = "0.6.0"
 psutil = ">=5.4.3,<5.5.0"
 "qt.py" = ">=1.1.0,<1.2.0"
 six = ">=1.12.0,<1.13.0"
-
-[package.dependencies.pathlib2]
-python = "<3"
-version = ">=2.3.0,<2.4.0"
+pathlib2 = {version = ">=2.3.0,<2.4.0", markers = "python_version < \"3\""}
 
 [package.source]
 reference = ""
@@ -996,23 +943,21 @@ url = "vendor/wlf-0.6.0-py2.py3-none-any.whl"
 [[package]]
 category = "main"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-marker = "python_version < \"3.8\""
 name = "zipp"
 optional = false
 python-versions = ">=2.7"
 version = "1.2.0"
 
 [package.dependencies]
-[package.dependencies.contextlib2]
-python = "<3.4"
-version = "*"
+contextlib2 = {version = "*", markers = "python_version < \"3.4\""}
 
 [package.extras]
 docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "unittest2", "jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "a5b414709f73e7b66be65a0708bad6f04b772769d148bba10391f106b5b057ef"
+content-hash = "ecfd3688f2b8afbef6d36db51e09f42a1014de003b589d0c115f95a6c602a6ae"
+lock-version = "1.1"
 python-versions = "^2.7"
 
 [metadata.files]
@@ -1087,6 +1032,9 @@ environs = [
     {file = "environs-4.2.0-py2.py3-none-any.whl", hash = "sha256:ec8c5ddd044a8ed1190cbef50ba0eef277057946b96eae457afd865c38d9e8c5"},
     {file = "environs-4.2.0.tar.gz", hash = "sha256:9d83321a32e29c963f199bf118d9dae199b42ab22b247b11d909b0d203e068bf"},
 ]
+et-xmlfile = [
+    {file = "et_xmlfile-1.0.1.tar.gz", hash = "sha256:614d9722d572f6246302c4491846d2c393c199cfa4edc9af593437691683335b"},
+]
 functools32 = [
     {file = "functools32-3.2.3-2.tar.gz", hash = "sha256:f6253dfbe0538ad2e387bd8fdfd9293c925d63553f5813c4e587745416501e6d"},
     {file = "functools32-3.2.3-2.zip", hash = "sha256:89d824aa6c358c421a234d7f9ee0bd75933a67c29588ce50aaa3acdf4d403fa0"},
@@ -1120,6 +1068,10 @@ ipython-genutils = [
 ipywidgets = [
     {file = "ipywidgets-7.5.1-py2.py3-none-any.whl", hash = "sha256:13ffeca438e0c0f91ae583dc22f50379b9d6b28390ac7be8b757140e9a771516"},
     {file = "ipywidgets-7.5.1.tar.gz", hash = "sha256:e945f6e02854a74994c596d9db83444a1850c01648f1574adf144fbbabe05c97"},
+]
+jdcal = [
+    {file = "jdcal-1.4.1-py2.py3-none-any.whl", hash = "sha256:1abf1305fce18b4e8aa248cf8fe0c56ce2032392bc64bbd61b5dff2a19ec8bba"},
+    {file = "jdcal-1.4.1.tar.gz", hash = "sha256:472872e096eb8df219c23f2689fc336668bdb43d194094b5cc1707e1640acfc8"},
 ]
 jinja2 = [
     {file = "Jinja2-2.11.2-py2.py3-none-any.whl", hash = "sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035"},
@@ -1200,6 +1152,9 @@ nbformat = [
 notebook = [
     {file = "notebook-5.7.9-py2.py3-none-any.whl", hash = "sha256:e74b83b076f43c4445375f3e7dabb742ddab3ec142cceb3d202892809be137ac"},
     {file = "notebook-5.7.9.tar.gz", hash = "sha256:a6d8c5bed28cd0601a8798aaa3f704b6e84bc44ff54d7c2a48d6178d4d2f1e0b"},
+]
+openpyxl = [
+    {file = "openpyxl-2.6.4.tar.gz", hash = "sha256:1d53801678e18d7fe38c116f1ad0c2383a654670c4c8806105b611c92d92f2e3"},
 ]
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
@@ -1409,10 +1364,6 @@ webencodings = [
 websocket-client = [
     {file = "websocket_client-0.57.0-py2.py3-none-any.whl", hash = "sha256:0fc45c961324d79c781bab301359d5a1b00b13ad1b10415a4780229ef71a5549"},
     {file = "websocket_client-0.57.0.tar.gz", hash = "sha256:d735b91d6d1692a6a181f2a8c9e0238e5f6373356f561bb9dc4c7af36f452010"},
-]
-widgetsnbextension = [
-    {file = "widgetsnbextension-3.5.1-py2.py3-none-any.whl", hash = "sha256:bd314f8ceb488571a5ffea6cc5b9fc6cba0adaf88a9d2386b93a489751938bcd"},
-    {file = "widgetsnbextension-3.5.1.tar.gz", hash = "sha256:079f87d87270bce047512400efd70238820751a11d2d8cb137a5a5bdbaf255c7"},
 ]
 win-unicode-console = [
     {file = "win_unicode_console-0.5.zip", hash = "sha256:d4142d4d56d46f449d6f00536a73625a871cba040f0bc1a2e305a04578f07d1e"},
