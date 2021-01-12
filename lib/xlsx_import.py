@@ -69,7 +69,7 @@ def get_data(filename):
 
 def parse_sheet(sheet):
     """Parse datasheet"""
-    assert isinstance(sheet, openpyxl.worksheet.Worksheet)
+    assert isinstance(sheet, openpyxl.worksheet.worksheet.Worksheet)
 
     first_row = find_first_row(sheet)
     data_start_row = first_row[0].row + 1
@@ -110,7 +110,7 @@ class NoEntry(ImportException):
 def find_first_row(sheet):
     """Find first avaliable row in sheet.  """
 
-    assert isinstance(sheet, openpyxl.worksheet.Worksheet)
+    assert isinstance(sheet, openpyxl.worksheet.worksheet.Worksheet)
     for row in sheet.rows:
         # Ignore empty row.
         if all(cell.value is None for cell in row):
