@@ -215,7 +215,7 @@ def _apply_on_selection(select, data):
         except cgtwq.PermissionError:
             LOGGER.error('当前用户无权限: 行=%s, 阶段=%s', data.index, data.phase)
         except ValueError as ex:
-            LOGGER.error('错误: %s', ex)
+            LOGGER.error('错误: 行=%s, %s', data.index, ex)
 
 
 def _convert_note(value):
