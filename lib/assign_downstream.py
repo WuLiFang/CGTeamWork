@@ -11,8 +11,8 @@ import win_unicode_console
 import cgtwq
 from wlf.console import pause
 
-DOWNSTREAM_DICT = {'灯光': '渲染',
-                   '合成': '输出'}
+DOWNSTREAM_DICT = {'灯光': ['渲染', '预渲染'],
+                   '合成': ['输出']}
 
 
 def assign_same_to_downstream(select):
@@ -24,7 +24,7 @@ def assign_same_to_downstream(select):
 
     target = select.module.filter(
         cgtwq.Field('shot.shot').in_(current_data.column('shot.shot')),
-        cgtwq.Field('pipeline') == DOWNSTREAM_DICT[pipeline.name])
+        cgtwq.Field('pipeline').in_(DOWNSTREAM_DICT[pipeline.name]))
     target_data = target.get_fields('id', 'shot.shot', 'account_id')
 
     errored_shots = []
