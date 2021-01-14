@@ -46,8 +46,8 @@ def assign_same_to_downstream(select):
                 '设置制作者: %s: %s: %s -> %s',
                 pipeline,
                 shot,
-                target_account_ids,
-                account_ids,
+                ','.join(target_account_ids),
+                ','.join(account_ids),
             )
             select.module.select(_id).flow.assign(account_ids)
 
@@ -64,7 +64,7 @@ def main():
         assign_same_to_downstream(select)
         pause(5)
     except KeyError:
-        LOGGER.error('当前仅支持流程: {}'.format(','.join(DOWNSTREAM_DICT.keys())))
+        LOGGER.error('当前仅支持流程: %s', ','.join(DOWNSTREAM_DICT.keys()))
         pause(0)
     except:
         import traceback
