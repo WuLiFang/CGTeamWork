@@ -8,3 +8,4 @@ ipykernel==4.10.0
 tornado==5.1.1
 jupyter-console==5.2.0
 jupyter==1.0.0
+beautifulsoup4==4.9.3
