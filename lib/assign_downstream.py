@@ -10,7 +10,7 @@ import win_unicode_console
 import cgtwq
 from wlf.console import pause
 
-DOWNSTREAM_DICT = {'灯光': ['渲染', '预渲染'],
+DOWNSTREAM_DICT = {'灯光': ['渲染'],
                    '合成': ['输出']}
 LOGGER = logging.getLogger(__name__)
 
