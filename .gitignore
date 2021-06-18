@@ -12,3 +12,6 @@ build/
 
 # Third party libraries
 site-packages
+
+*.local
+*.local.*

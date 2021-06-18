@@ -241,6 +241,7 @@ def main():
     win_unicode_console.enable()
     logging.basicConfig(
         level='INFO', format='%(levelname)-7s:%(name)s: %(message)s')
+    logging.getLogger("cgtwq").setLevel(logging.DEBUG)
 
     print('{:-^50}'.format('导入XLSX返修表 v{}'.format(__version__)))
     dummy = application()
