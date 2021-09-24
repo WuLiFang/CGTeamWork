@@ -17,7 +17,7 @@ LOGGER.setLevel(logging.DEBUG)
 
 class CurrentItems(cgtwb.Current):
     """Current asset selected from cgtw, mayby multiple item.  """
-    fields = {'name': 'shot.shot',
+    fields = {'name': 'shot.entity',
               'retake_record': '{0.module}.retake_record',
               'client': '{0.module}.client_status',
               'first_retake_time': '{0.module}.first_retake_time',
@@ -25,7 +25,7 @@ class CurrentItems(cgtwb.Current):
               'last_retake_cost': '{0.module}.last_retake_cost',
               'total_retake_cost': '{0.module}.total_retake_cost',
               'client_retake_count': '{0.module}.client_retake_count'}
-    asset_task_fields = {'name': 'asset.asset_name'}
+    asset_task_fields = {'name': 'asset.entity'}
     l10n_dict = {
         'retake': u'✘',
         'approve': u'✔',

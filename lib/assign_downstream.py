@@ -20,14 +20,14 @@ def assign_same_to_downstream(select):
 
     assert isinstance(select, cgtwq.Selection)
     pipeline = select.pipeline.one()
-    current_data = select.get_fields('shot.shot', 'account_id')
+    current_data = select.get_fields('shot.entity', 'account_id')
 
     target = select.module.filter(
-        cgtwq.Field('shot.shot').in_(current_data.column('shot.shot')),
+        cgtwq.Field('shot.entity').in_(current_data.column('shot.entity')),
         cgtwq.Field('pipeline').in_(DOWNSTREAM_DICT[pipeline.name]))
     target_data = target.get_fields(
         'id',
-        'shot.shot',
+        'shot.entity',
         'account_id',
         'pipeline',
     )

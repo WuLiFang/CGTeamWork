@@ -153,7 +153,7 @@ def import_data(data, database, module, module_type):
         assert isinstance(i, RowData)
         try:
             select = module.filter(
-                (cgtwq.Field('shot.shot') == i.shot)
+                (cgtwq.Field('shot.entity') == i.shot)
                 & (cgtwq.Field('pipeline') == i.pipeline))
         except ValueError:
             LOGGER.error('找不到对应条目: 行=%s, 数据库=%s, 镜头号=%s, 流程=%s',

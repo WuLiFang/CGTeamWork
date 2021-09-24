@@ -14,14 +14,14 @@ __version__ = '0.1.1'
 
 class CurrentItems(cgtwb.Current):
     """Current asset selected from cgtw, mayby multiple item.  """
-    shot_task_fields = {'name': 'shot.shot',
+    shot_task_fields = {'name': 'shot.entity',
                         'start_date': 'shot_task.start_date',
                         'end_date': 'shot_task.end_date',
                         'deadline': 'shot_task.dead_line',
                         'first_submit': 'shot_task.first_submit_time',
                         'last_submit': 'shot_task.last_submit_time',
                         'finish_time': 'shot_task.finish_time'}
-    asset_task_fields = {'name': 'asset.asset_name',
+    asset_task_fields = {'name': 'asset.entity',
                          'start_date': 'asset_task.start_date',
                          'end_date': 'asset_task.end_date',
                          'deadline': 'asset_task.dead_line',

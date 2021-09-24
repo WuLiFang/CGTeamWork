@@ -50,16 +50,8 @@ class RemoteFiles(set):
         select = cgtwq.DesktopClient().selection()
         files = set()
         if target == SUBMIT_FILE:
-            # Get from submit file path field.]
-
-            for i in select['submit_file_path']:
-                try:
-                    pathlist = json.loads(i)['file_path']
-                    if isinstance(pathlist, list):
-                        files.update(pathlist)
-                except (KeyError, ValueError, TypeError):
-                    LOGGER.warning('Can not parse: %s', i)
-                    continue
+            # Get from submit files.
+            files.update(select.flow.list_submit_file())
         else:
             # Get from filebox.
             checked = set()
@@ -160,11 +152,11 @@ class Dialog(QDialog):
             lambda status: self.on_radio_toggled(SUBMIT_FILE, status))
         select = cgtwq.DesktopClient().selection()
         pipeline = select.module.database.pipeline.filter(
-            cgtwq.Filter('entity_name', select['pipeline'][0]))[0]
+            cgtwq.Filter('entity', select['pipeline'][0]))[0]
         for filebox in (select.module
                         .database
                         .filebox
-                        .filter(cgtwq.Filter('#pipeline_id', pipeline.id))):
+                        .list_by_pipeline(pipeline)):
             button = QRadioButton(filebox.title)
             button.setObjectName(filebox.title)
             button.toggled.connect(

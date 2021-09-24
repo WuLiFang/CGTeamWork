@@ -31,7 +31,7 @@ def _link(db, shot, assets):
     shot_module = db.module("shot", "info")
     try:
         matched_assets = asset_module.filter(
-            cgtwq.Field("asset.asset_name").in_(assets), namespace="asset"
+            cgtwq.Field("asset.entity").in_(assets), namespace="asset"
         )
         if len(matched_assets) != len(assets):
             LOGGER.warning(
@@ -41,7 +41,7 @@ def _link(db, shot, assets):
         LOGGER.warning("not found assets: %s", assets)
         return
     try:
-        shots = shot_module.filter(cgtwq.Field("shot.shot") == shot, namespace="shot")
+        shots = shot_module.filter(cgtwq.Field("shot.entity") == shot, namespace="shot")
     except cgtwq.EmptySelection:
         LOGGER.warning("not found shot: %s", shot)
         return
@@ -71,8 +71,8 @@ def main():
 
 必须有命名为镜头(支持别名：shot)的列，所有其他表头不为空的列将视为资产。
 
-镜头的值为 shot.shot 字段
-资产的值为 asset.asset_name 字段
+镜头的值为 shot.entity 字段
+资产的值为 asset.entity 字段
 """
     )
     client = cgtwq.DesktopClient()

@@ -145,7 +145,7 @@ class AssetTask(object):
     fields = {'level': 'asset.define_jbg',
               'finish_time': 'asset_task.finish_time',
               'submit_time': 'asset_task.last_submit_time',
-              'name': 'asset.asset_name',
+              'name': 'asset.entity',
               'cn_name': 'asset.cn_name',
               'status': 'asset_task.status',
               'pipeline': 'asset_task.pipeline'}

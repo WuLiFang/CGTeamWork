@@ -70,7 +70,7 @@ def get_rows(select):
 
     tasks = set([i.task_id for i in histories])
     tasks = select.module.select(*tasks)
-    tasks = tasks.get_fields("id", "shot.shot", "pipeline", "artist")
+    tasks = tasks.get_fields("id", "shot.entity", "pipeline", "artist")
     tasks = {i[0]: dict(shot=i[1], pipeline=i[2], artist=i[3]) for i in tasks}
     ret = []
     history_by_task = {}
