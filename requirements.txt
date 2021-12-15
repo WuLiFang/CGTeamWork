@@ -3,11 +3,6 @@
 ./vendor/cgtwq_uploader-3.6.4-py2.py3-none-any.whl
 PySide==1.2.4
 win_unicode_console==0.5
-ipython==5.8.0
-ipykernel==4.10.0
-tornado==5.1.1
-jupyter-console==5.2.0
-jupyter==1.0.0
 beautifulsoup4==4.9.3
 cast-unknown==0.1.6
 six==1.15.0
