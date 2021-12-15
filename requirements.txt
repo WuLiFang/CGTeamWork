@@ -1,5 +1,5 @@
 ./vendor/wlf-0.6.0-py2.py3-none-any.whl
-./vendor/cgtwq-3.6.0-py2.py3-none-any.whl
+./vendor/cgtwq-3.6.1-py2.py3-none-any.whl
 ./vendor/cgtwq_uploader-3.6.4-py2.py3-none-any.whl
 PySide==1.2.4
 win_unicode_console==0.5
