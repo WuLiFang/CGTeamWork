@@ -53,27 +53,12 @@ def main():
     if not select_status:
         raise ValueError("`selectStatus` 参数为必填")
 
-    edges = set()  # type: set[tuple[RowID, RowID]]
-
-    ids = set()  # type: set[RowID]
-
-    def _on_row_id(id):
-        # type: (RowID) -> None
-        if id in ids:
-            return
-        ids.add(id)
-        res = client.pipeline.neighbor_task(id)
-        for i in res.next():
-            edges.add((id, i))
-            _on_row_id(i)
-
-        for i in res.previous():
-            edges.add((i, id))
-            _on_row_id(i)
-
-    for id in ctx.row_ids():
-        _on_row_id(id)
-
+    module_ids = tuple(set(client.table(
+        ctx.database,
+        ctx.module,
+        ctx.module_type,
+        filter_by=F("%s.id" % (ctx.module_type, )).in_(ctx.id_list),
+    ).column("%s.id" % ctx.module)))
     selected_rows = {
         RowID(ctx.database, ctx.module, ctx.module_type, id): RowData(status, pipeline)
         for id, status, pipeline in client.table(
@@ -82,9 +67,26 @@ def main():
             ctx.module_type,
             filter_by=F(field_sign)
             .in_(select_status)
-            .and_(F("%s.id" % (ctx.module_type)).in_([i.value for i in ids])),
+            .and_(F("%s.id" % (ctx.module,)).in_(module_ids)),
         ).rows("%s.id" % (ctx.module_type,), field_sign, "pipeline.entity")
     }
+
+    edges = set()  # type: set[tuple[RowID, RowID]]
+    nodes = set()  # type: set[RowID]
+    def _on_row_id(id):
+        # type: (RowID) -> None
+        if id in nodes:
+            return
+        nodes.add(id)
+        res = client.pipeline.neighbor_task(id)
+        for i in res.next():
+            edges.add((id, i))
+
+        for i in res.previous():
+            edges.add((i, id))
+            _on_row_id(i)
+    for id in selected_rows:
+        _on_row_id(id)
 
     def _find_active(i):
         # type: (RowID) -> Optional[RowID]
