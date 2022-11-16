@@ -14,8 +14,8 @@ from string import Template
 from six import iteritems
 import logging
 
+from wulifang._util import capture_exception
 _LOGGER = logging.getLogger(__name__)
-
 
 class RowData:
     def __init__(self, status, pipeline):
@@ -122,17 +122,19 @@ def main():
         assert active_id, "every select id should has a active id"
         is_active = id == active_id
         target_status = active_status if is_active else pending_status
-        if target_status and data.status != target_status:
-            msg = _render_msg(active_id)
-            _LOGGER.info(
-                "[%s->%s]%s(%s): %s", data.status, target_status, data.pipeline, id, msg
-            )
-            client.flow.update(id, field_sign, target_status, msg)
-            client.view.refresh_row(id)
-        else:
-            _LOGGER.info("[%s]%s(%s)", data.status, data.pipeline, id)
+        with capture_exception("[%s->%s]%s(%s): %s" %(data.status, target_status, data.pipeline, id, "%s")):
+            if target_status and data.status != target_status:
+                msg = _render_msg(active_id)
+                _LOGGER.info(
+                    "[%s->%s]%s(%s): %s", data.status, target_status, data.pipeline, id, msg
+                )
+                client.flow.update(id, field_sign, target_status, msg)
+                client.view.refresh_row(id)
+            else:
+                _LOGGER.info("[%s]%s(%s)", data.status, data.pipeline, id)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    main()
+    with capture_exception():
+        main()
