@@ -122,7 +122,7 @@ def main():
         assert active_id, "every select id should has a active id"
         is_active = id == active_id
         target_status = active_status if is_active else pending_status
-        with capture_exception("[%s->%s]%s(%s): %s" %(data.status, target_status, data.pipeline, id, "%s")):
+        with capture_exception("[%s->%s]%s(%s): %%s" %(data.status, target_status, data.pipeline, id)):
             if target_status and data.status != target_status:
                 msg = _render_msg(active_id)
                 _LOGGER.info(
