@@ -10,7 +10,7 @@ CGTEAMWORK_PYTHON?="C:\cgteamwork\python\python.exe"
 
 
 .venv/.sentinel: export PYTHONIOENCODING=utf8
-.venv/.sentinel: .venv requirements.txt
+.venv/.sentinel: .venv requirements.txt vendor/*.whl
 	. ./scripts/activate-venv.sh &&\
 		pip install -U -r requirements.txt
 	touch $@

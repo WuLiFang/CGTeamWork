@@ -1,0 +1,15 @@
+{
+  "executionEnvironments": [
+    {
+      "root": "lib",
+      "extraPaths": [".", ".venv/lib/site-packages"]
+    }
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingModuleSource": "none",
+  "reportShadowedImports": false,
+  "reportUnusedImport": "error",
+  "reportUnknownMemberType": "information",
+  "reportTypeCommentUsage": "none",
+  "exclude": ["**/vendor"],
+}
