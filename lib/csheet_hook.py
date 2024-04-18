@@ -18,29 +18,31 @@ _LOGGER = logging.getLogger(__name__)
 class _GQLClient:
     def __init__(self, url, login, password):
         # type: (Text, Text, Text) -> None
-        self.url = url
-        self.login = login
-        self.password = password
+        self._url = url
+        self._login = login
+        self._password = password
+        self._session = requests.Session()
+        self._session.trust_env = False  # ignore system proxy setting
 
     def execute(self, operation_name, query, variables):
         # type: (Text,Text, dict[str, Any]) -> dict[str, Any]
 
         _LOGGER.info("send: %s: %s" % (operation_name, variables))
-        resp = requests.post(  # type: ignore
-            self.url,
+        resp = self._session.post(  # type: ignore
+            self._url,
             json=dict(operationName=operation_name, query=query, variables=variables),
-            auth=(self.login, self.password),
+            auth=(self._login, self._password),
         )  # type: requests.Response
         if resp.status_code != 200:  # type: ignore
             raise RuntimeError(
-                "POST %s: status: %s: %s" % (self.url, operation_name, resp.status_code)  # type: ignore
+                "POST %s: status: %s: %s" % (self._url, operation_name, resp.status_code)  # type: ignore
             )
         res = resp.json()  # type: ignore
         _LOGGER.info("receive: %s" % (res,))
         if "errors" in res:
             raise RuntimeError(
                 "%s: gql error: %s: %s"
-                % (self.url, operation_name, [i["message"] for i in res["errors"]])  # type: ignore
+                % (self._url, operation_name, [i["message"] for i in res["errors"]])  # type: ignore
             )
         return res["data"]  # type: ignore
 
